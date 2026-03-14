@@ -1,9 +1,9 @@
-import Link from "next/link";
 import { redirect, notFound } from "next/navigation";
 
 import { createClient } from "@/lib/supabase/server";
 import { ensureProfileForUser, getActiveMembershipWithOrg } from "@/lib/supabase/tenant";
 import { getProvider, getProviderAvailability, DAY_NAMES } from "@/lib/db/providers";
+import { KeyValueRow, PageHeader, Surface } from "@/components/ui/app-kit";
 
 export default async function ProviderProfilePage({
   params,
@@ -40,34 +40,23 @@ export default async function ProviderProfilePage({
 
   return (
     <section className="space-y-6">
-      <header className="flex items-start gap-4 border-b border-[color:var(--border)] pb-6">
-        <div className="space-y-1">
-          <Link
-            href={`/org/${slug}/providers`}
-            className="text-sm text-[color:var(--muted)] hover:text-[color:var(--foreground)]"
-          >
-            ← Providers
-          </Link>
-          <h1 className="text-3xl font-semibold tracking-tight text-[color:var(--foreground)]">
-            {provider.profile?.full_name ?? provider.profile?.email ?? "—"}
-          </h1>
-          {provider.specialty && (
-            <p className="text-sm text-[color:var(--muted)]">{provider.specialty}</p>
-          )}
-        </div>
-      </header>
+      <PageHeader
+        backHref={`/org/${slug}/providers`}
+        backLabel="Providers"
+        title={provider.profile?.full_name ?? provider.profile?.email ?? "—"}
+        description={provider.specialty ?? "Provider profile"}
+      />
 
       <div className="grid gap-6 lg:grid-cols-2">
-        {/* Profile details */}
-        <div className="rounded-[1.5rem] border border-[color:var(--border)] bg-white p-6 space-y-4">
-          <h2 className="text-xs font-semibold uppercase tracking-[0.2em] text-[color:var(--muted)]">
+        <Surface className="space-y-4">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-[color:var(--muted)]">
             Provider details
-          </h2>
-          <dl className="space-y-3 text-sm">
-            <Row label="Email address">{provider.profile?.email ?? "—"}</Row>
-            <Row label="Specialty">{provider.specialty ?? "—"}</Row>
-            <Row label="License number">{provider.license_number ?? "—"}</Row>
-            <Row label="Timezone">{provider.timezone}</Row>
+          </p>
+          <dl>
+            <KeyValueRow label="Email address">{provider.profile?.email ?? "—"}</KeyValueRow>
+            <KeyValueRow label="Specialty">{provider.specialty ?? "—"}</KeyValueRow>
+            <KeyValueRow label="License number">{provider.license_number ?? "—"}</KeyValueRow>
+            <KeyValueRow label="Timezone">{provider.timezone}</KeyValueRow>
           </dl>
           {provider.bio && (
             <div className="border-t border-[color:var(--border)] pt-4">
@@ -77,17 +66,16 @@ export default async function ProviderProfilePage({
               <p className="mt-2 text-sm text-[color:var(--foreground)]">{provider.bio}</p>
             </div>
           )}
-        </div>
+        </Surface>
 
-        {/* Availability */}
-        <div className="rounded-[1.5rem] border border-[color:var(--border)] bg-white p-6 space-y-4">
-          <h2 className="text-xs font-semibold uppercase tracking-[0.2em] text-[color:var(--muted)]">
+        <Surface className="space-y-4">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-[color:var(--muted)]">
             Weekly availability
-          </h2>
+          </p>
 
           {availability.length === 0 ? (
-            <p className="text-sm text-[color:var(--muted)]">
-              No booking windows have been added for this provider yet.
+            <p className="text-sm leading-6 text-[color:var(--muted)]">
+              This provider still needs weekly availability before patients can schedule with them.
             </p>
           ) : (
             <div className="space-y-3">
@@ -101,7 +89,7 @@ export default async function ProviderProfilePage({
                     </span>
                     <div className="flex flex-col gap-1">
                       {windows.map((w) => (
-                        <span key={w.id} className="text-[color:var(--muted)]">
+                        <span key={w.id} className="rounded-[0.9rem] bg-[color:var(--surface-subtle)] px-3 py-2 text-[color:var(--muted)]">
                           {w.start_time.slice(0, 5)} – {w.end_time.slice(0, 5)}{" "}
                           <span className="text-xs">({w.slot_minutes}-minute visits)</span>
                         </span>
@@ -112,17 +100,8 @@ export default async function ProviderProfilePage({
               })}
             </div>
           )}
-        </div>
+        </Surface>
       </div>
     </section>
-  );
-}
-
-function Row({ label, children }: { label: string; children: React.ReactNode }) {
-  return (
-    <div className="flex gap-4">
-      <dt className="w-24 shrink-0 text-[color:var(--muted)]">{label}</dt>
-      <dd className="font-medium text-[color:var(--foreground)]">{children}</dd>
-    </div>
   );
 }

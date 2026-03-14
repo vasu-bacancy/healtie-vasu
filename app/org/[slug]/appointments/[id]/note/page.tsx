@@ -5,8 +5,22 @@ import { format } from "date-fns";
 import { createClient } from "@/lib/supabase/server";
 import { ensureProfileForUser, getActiveMembershipWithOrg } from "@/lib/supabase/tenant";
 import { getAppointment } from "@/lib/db/appointments";
-import { getEncounterByAppointmentId, getClinicalNoteByEncounterId } from "@/lib/db/encounters";
+import {
+  getEncounterByAppointmentId,
+  getClinicalNoteByEncounterId,
+} from "@/lib/db/encounters";
 import { saveNote, signNote } from "./actions";
+import {
+  DataPill,
+  EmptyState,
+  Notice,
+  PageHeader,
+  Surface,
+  controlClassName,
+  inlineActionClassName,
+  primaryButtonClassName,
+  secondaryButtonClassName,
+} from "@/components/ui/app-kit";
 
 export default async function SoapNotePage({
   params,
@@ -29,10 +43,10 @@ export default async function SoapNotePage({
   if (!membership) redirect("/sign-in");
   if (membership.role === "patient") redirect(`/org/${slug}/appointments/${id}`);
 
-  const appt = await getAppointment(supabase, id, membership.organization_id).catch(
+  const appointment = await getAppointment(supabase, id, membership.organization_id).catch(
     () => null,
   );
-  if (!appt) notFound();
+  if (!appointment) notFound();
 
   const encounter = await getEncounterByAppointmentId(
     supabase,
@@ -43,28 +57,21 @@ export default async function SoapNotePage({
   if (!encounter) {
     return (
       <section className="space-y-6">
-        <header className="border-b border-[color:var(--border)] pb-6">
-          <Link
-            href={`/org/${slug}/appointments/${id}/room`}
-            className="text-sm text-[color:var(--muted)] hover:text-[color:var(--foreground)]"
-          >
-            ← Visit room
-          </Link>
-          <h1 className="mt-2 text-3xl font-semibold tracking-tight text-[color:var(--foreground)]">
-            SOAP note
-          </h1>
-        </header>
-        <div className="rounded-[1.5rem] border border-[color:var(--border)] bg-white p-10 text-center">
-          <p className="text-sm text-[color:var(--muted)]">
-            Start the visit from the visit room before you create a note.
-          </p>
-          <Link
-            href={`/org/${slug}/appointments/${id}/room`}
-            className="mt-4 inline-block text-sm font-semibold text-[color:var(--accent)] hover:underline"
-          >
-            Go to visit room
-          </Link>
-        </div>
+        <PageHeader
+          backHref={`/org/${slug}/appointments/${id}/room`}
+          backLabel="Visit room"
+          title="SOAP note"
+          description="Start the visit from the room before creating the note."
+        />
+        <EmptyState
+          title="The note unlocks when the visit starts."
+          description="Open the visit room and start the encounter before documenting the SOAP note."
+          action={
+            <Link href={`/org/${slug}/appointments/${id}/room`} className={inlineActionClassName}>
+              Go to visit room
+            </Link>
+          }
+        />
       </section>
     );
   }
@@ -74,115 +81,93 @@ export default async function SoapNotePage({
     encounter.id,
     membership.organization_id,
   );
-
-  const isSigned = !!note?.signed_at;
+  const isSigned = Boolean(note?.signed_at);
 
   return (
     <section className="space-y-6">
-      <header className="flex items-start justify-between border-b border-[color:var(--border)] pb-6">
-        <div className="space-y-1">
-          <Link
-            href={`/org/${slug}/appointments/${id}/room`}
-            className="text-sm text-[color:var(--muted)] hover:text-[color:var(--foreground)]"
-          >
-            ← Visit room
-          </Link>
-          <h1 className="text-3xl font-semibold tracking-tight text-[color:var(--foreground)]">
-            SOAP note
-          </h1>
-          <p className="text-sm text-[color:var(--muted)]">
-            {appt.patient.full_name} ·{" "}
-            {format(new Date(appt.scheduled_start), "MMM d, yyyy")}
-          </p>
-          <p className="text-sm text-[color:var(--muted)]">
-            Save a draft while the visit is in progress, then sign the note when it is final.
-          </p>
-        </div>
-        {isSigned && (
-          <span className="mt-1 inline-flex rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700">
-            Signed {format(new Date(note!.signed_at!), "MMM d, h:mm a")}
-          </span>
-        )}
-      </header>
+      <PageHeader
+        backHref={`/org/${slug}/appointments/${id}/room`}
+        backLabel="Visit room"
+        title="SOAP note"
+        description={`${appointment.patient.full_name} · ${format(new Date(appointment.scheduled_start), "MMM d, yyyy")}`}
+        meta={
+          isSigned ? (
+            <DataPill tone="success">
+              Signed {format(new Date(note!.signed_at!), "MMM d, h:mm a")}
+            </DataPill>
+          ) : (
+            <p className="text-sm text-[color:var(--muted)]">
+              Save a draft while the visit is in progress, then sign the note when it is final.
+            </p>
+          )
+        }
+      />
 
-      {saved === "1" && !isSigned && (
-        <div className="rounded-[1.25rem] border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-800">
-          Draft saved. Review it, then sign when you&apos;re ready to file it.
-        </div>
-      )}
+      {saved === "1" && !isSigned ? (
+        <Notice tone="success">
+          Draft saved. Review it, then sign when you’re ready to file it.
+        </Notice>
+      ) : null}
 
-      <div className="mx-auto max-w-2xl">
+      <div className="mx-auto max-w-3xl">
         <form action={saveNote} className="space-y-4">
           <input type="hidden" name="appointment_id" value={id} />
-          {note && <input type="hidden" name="note_id" value={note.id} />}
+          {note ? <input type="hidden" name="note_id" value={note.id} /> : null}
 
           {(["subjective", "objective", "assessment", "plan"] as const).map((field) => (
-            <div
-              key={field}
-              className="rounded-[1.5rem] border border-[color:var(--border)] bg-white p-6 space-y-2"
-            >
+            <Surface key={field} className="space-y-3">
               <label
                 htmlFor={field}
-                className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.2em] text-[color:var(--muted)]"
+                className="flex items-center gap-3 text-[11px] font-semibold uppercase tracking-[0.24em] text-[color:var(--muted)]"
               >
-                <span className="flex h-5 w-5 items-center justify-center rounded-full bg-[color:var(--accent)] text-[10px] font-bold text-white">
+                <span className="flex h-7 w-7 items-center justify-center rounded-full bg-[color:var(--accent)] text-xs font-bold text-[color:var(--surface)]">
                   {field[0].toUpperCase()}
                 </span>
                 {field.charAt(0).toUpperCase() + field.slice(1)}
               </label>
-              <p className="text-xs text-[color:var(--muted)]">{FIELD_GUIDANCE[field]}</p>
+              <p className="text-sm leading-6 text-[color:var(--muted)]">{FIELD_GUIDANCE[field]}</p>
               <textarea
                 id={field}
                 name={field}
-                rows={4}
+                rows={5}
                 disabled={isSigned}
                 defaultValue={note?.[field] ?? ""}
                 placeholder={PLACEHOLDERS[field]}
-                className="w-full resize-none rounded-xl border border-[color:var(--border)] bg-transparent px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[color:var(--accent)] disabled:opacity-60"
+                className={`${controlClassName()} min-h-[11rem] resize-y disabled:opacity-60`}
               />
-            </div>
+            </Surface>
           ))}
 
-          {!isSigned && (
-            <div className="flex gap-3 justify-end">
-              <button
-                type="submit"
-                className="rounded-[1rem] border border-[color:var(--border)] px-4 py-2.5 text-sm font-semibold text-[color:var(--foreground)] transition hover:bg-[color:var(--surface-strong)]"
-              >
+          {!isSigned ? (
+            <div className="flex justify-end">
+              <button type="submit" className={secondaryButtonClassName}>
                 Save draft note
               </button>
             </div>
-          )}
+          ) : null}
         </form>
 
-        {/* Sign form — separate so it doesn't interfere with save */}
-        {note && !isSigned && (
-          <form action={signNote} className="mt-4">
+        {note && !isSigned ? (
+          <form action={signNote} className="mt-4 space-y-3">
             <input type="hidden" name="appointment_id" value={id} />
             <input type="hidden" name="note_id" value={note.id} />
-            <input type="hidden" name="patient_id" value={appt.patient_id} />
-            <button
-              type="submit"
-              className="w-full rounded-[1rem] bg-[color:var(--accent)] px-4 py-3 text-sm font-semibold text-white transition hover:bg-[color:var(--accent-strong)]"
-            >
+            <input type="hidden" name="patient_id" value={appointment.patient_id} />
+            <button type="submit" className={`${primaryButtonClassName} w-full justify-center py-3`}>
               Sign and file note
             </button>
-            <p className="mt-2 text-center text-xs text-[color:var(--muted)]">
-              Once signed, the note will appear in the patient&apos;s chart and cannot be edited.
+            <p className="text-center text-xs leading-5 text-[color:var(--muted)]">
+              Once signed, the note appears in the patient chart and can no longer be edited.
             </p>
           </form>
-        )}
+        ) : null}
 
-        {isSigned && (
-          <div className="mt-4 text-center">
-            <Link
-              href={`/org/${slug}/patients/${appt.patient_id}`}
-              className="text-sm font-semibold text-[color:var(--accent)] hover:underline"
-            >
+        {isSigned ? (
+          <div className="mt-5 text-center">
+            <Link href={`/org/${slug}/patients/${appointment.patient_id}`} className={inlineActionClassName}>
               Open patient chart
             </Link>
           </div>
-        )}
+        ) : null}
       </div>
     </section>
   );

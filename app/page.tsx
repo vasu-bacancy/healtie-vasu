@@ -64,87 +64,99 @@ export default async function Home() {
   }
 
   return (
-    <main className="app-shell min-h-screen">
-      <section className="grid-line mx-auto flex min-h-screen w-full max-w-7xl flex-col px-6 py-8 sm:px-8 lg:px-12">
-        <div className="panel rounded-[2rem] px-6 py-6 sm:px-8 sm:py-8">
-          <div className="flex flex-col gap-12">
-            <div className="grid gap-10 lg:grid-cols-[1.2fr_0.9fr] lg:items-start">
-              <div className="space-y-8">
-                <div>
-                  <p className="section-label text-xs font-semibold">Healtie MVP Setup</p>
-                  <h1 className="mt-4 max-w-3xl text-4xl font-semibold tracking-[-0.04em] sm:text-5xl lg:text-6xl">
-                    A virtual care workflow for clinics, providers, and patients.
-                  </h1>
-                  <p className="mt-4 max-w-3xl text-base leading-7 text-[color:var(--muted)] sm:text-lg">
-                    Sign in with the demo account to walk through the clinic admin, provider, and patient flows.
-                    This MVP focuses on sign-in, availability, booking, virtual visits, and clinical notes.
-                  </p>
-                </div>
-
-                <div className="grid gap-4 md:grid-cols-3">
-                  {dashboardStats.map((stat) => (
-                    <article
-                      key={stat.label}
-                      className="rounded-[1.5rem] border border-[color:var(--border)] bg-[color:var(--surface)] px-5 py-5"
-                    >
-                      <p className="text-sm text-[color:var(--muted)]">{stat.label}</p>
-                      <p className="mt-3 text-2xl font-semibold tracking-[-0.03em]">{stat.value}</p>
-                      <p className="mt-2 text-sm leading-6 text-[color:var(--muted)]">{stat.hint}</p>
-                    </article>
-                  ))}
-                </div>
-              </div>
-
-              <div className="rounded-[1.75rem] border border-[color:var(--border)] bg-[color:var(--surface)] p-6 shadow-[0_20px_60px_rgba(24,33,43,0.08)]">
-                <p className="text-xs font-semibold text-[color:var(--accent-strong)]">Sign in</p>
-                <p className="mt-1 text-sm leading-6 text-[color:var(--muted)]">
-                  Use the demo account (admin@northstar.test / Demo1234!) to open the clinic workspace and explore each role.
-                </p>
-                <div className="mt-6">
-                  <LoginForm />
-                </div>
-              </div>
+    <main className="min-h-screen bg-[color:var(--background)]">
+      <section className="mx-auto flex max-w-5xl flex-col gap-10 px-6 py-12 sm:px-8 lg:px-12">
+        <div className="grid gap-10 lg:grid-cols-[1.1fr_0.9fr]">
+          <div className="space-y-6">
+            <div className="space-y-4">
+              <p className="hero-pill">Healtie MVP release</p>
+              <h1 className="text-4xl font-semibold leading-tight text-[color:var(--foreground)] sm:text-5xl">
+                A focused path from sign-in to signed notes.
+              </h1>
+              <p className="text-sm leading-6 text-[color:var(--muted)]">
+                Sign in with the demo account and explore the clinic admin, provider, and patient dashboards.
+                The experience stays narrow: auth, intake, availability, booking, meetings, and notes.
+              </p>
             </div>
 
-            <div className="grid gap-6 lg:grid-cols-[1.2fr_0.8fr]">
-              <section className="rounded-[1.75rem] border border-[color:var(--border)] bg-[color:var(--surface)] px-6 py-6">
-                <p className="section-label text-xs font-semibold">What Ships First</p>
-                <ul className="mt-5 grid gap-3">
-                  {productSlices.map((slice) => (
-                    <li
-                      key={slice}
-                      className="rounded-[1.25rem] border border-[color:var(--border)] bg-[color:var(--surface-strong)] px-4 py-4 text-sm leading-6 text-[color:var(--foreground)]"
-                    >
-                      {slice}
-                    </li>
-                  ))}
-                </ul>
-              </section>
-
-              <section className="rounded-[1.75rem] border border-[color:var(--border)] bg-[color:var(--surface)] px-6 py-6">
-                <p className="section-label text-xs font-semibold">Next Actions</p>
-                <div className="mt-5 space-y-4">
-                  {setupChecklist.map((item, index) => (
-                    <article key={item.title} className="rounded-[1.25rem] bg-[color:var(--surface-strong)] px-4 py-4">
-                      <p className="text-xs font-semibold text-[color:var(--accent-strong)]">
-                        Step {index + 1}
-                      </p>
-                      <h2 className="mt-2 text-base font-semibold">{item.title}</h2>
-                      <p className="mt-2 text-sm leading-6 text-[color:var(--muted)]">
-                        {item.description}
-                      </p>
-                    </article>
-                  ))}
+            <dl className="grid gap-3 sm:grid-cols-3">
+              {dashboardStats.map((stat) => (
+                <div
+                  key={stat.label}
+                  className="rounded-[1.5rem] border border-[color:var(--border)] bg-white px-4 py-4"
+                >
+                  <dt className="text-[10px] font-semibold uppercase tracking-[0.3em] text-[color:var(--muted)]">
+                    {stat.label}
+                  </dt>
+                  <dd className="mt-2 text-2xl font-semibold text-[color:var(--foreground)]">{stat.value}</dd>
+                  <p className="mt-1 text-xs leading-5 text-[color:var(--muted)]">{stat.hint}</p>
                 </div>
-              </section>
-            </div>
+              ))}
+            </dl>
+          </div>
 
-            <div className="flex flex-col gap-3 border-t border-[color:var(--border)] pt-6 text-sm text-[color:var(--muted)] sm:flex-row sm:items-center sm:justify-between">
-              <p>Planning docs: `PLAN.md`, `TODO.md`, and `AGENTS.md`.</p>
-              <p>Implementation target: `/org/[slug]` dashboards powered by Supabase auth and RLS.</p>
+          <div className="rounded-[1.5rem] border border-[color:var(--border)] bg-white px-6 py-6 shadow-sm">
+            <p className="text-sm font-semibold text-[color:var(--accent-strong)]">Sign in</p>
+            <p className="mt-2 text-sm text-[color:var(--muted)]">
+              Demo credentials unlock the clinic workspace so you can try every role in a single walk-through.
+            </p>
+            <div className="mt-6">
+              <LoginForm />
             </div>
           </div>
         </div>
+
+        <section className="section-tint space-y-4 px-6 py-6">
+          <div>
+            <h2 className="text-xs font-semibold uppercase tracking-[0.35em] text-[color:var(--muted)]">
+              Demo priorities
+            </h2>
+            <p className="text-sm text-[color:var(--muted)]">
+              The release lives inside these focused slices.
+            </p>
+          </div>
+          <ul className="space-y-3 text-sm text-[color:var(--foreground)]">
+            {productSlices.map((slice) => (
+              <li
+                key={slice}
+                className="flex items-start gap-3 rounded-[1.25rem] border border-[color:var(--border)] bg-[color:rgba(255,255,255,0.9)] px-4 py-3 shadow-[0_20px_40px_rgba(15,118,110,0.05)]"
+              >
+                <span className="mt-1 h-2 w-2 rounded-full bg-[color:var(--accent-sun)]" aria-hidden />
+                <span>{slice}</span>
+              </li>
+            ))}
+          </ul>
+        </section>
+
+        <section className="section-tint space-y-3 px-6 py-6">
+          <div>
+            <h2 className="text-xs font-semibold uppercase tracking-[0.35em] text-[color:var(--muted)]">
+              Next setup steps
+            </h2>
+            <p className="text-sm text-[color:var(--muted)]">
+              Keep the backend wired before you start building pages and features.
+            </p>
+          </div>
+          <ol className="space-y-3 text-sm text-[color:var(--foreground)]">
+            {setupChecklist.map((item, index) => (
+              <li
+                key={item.title}
+                className="rounded-[1.25rem] border-l-4 border-[color:var(--accent-sun)] bg-[color:rgba(255,255,255,0.92)] px-5 py-4 shadow-[0_10px_30px_rgba(15,118,110,0.08)]"
+              >
+                <p className="text-[color:var(--accent-sun)] text-[10px] font-semibold uppercase tracking-[0.35em]">
+                  Step {index + 1}
+                </p>
+                <p className="mt-2 text-base font-semibold text-[color:var(--foreground)]">{item.title}</p>
+                <p className="mt-1 text-sm leading-6">{item.description}</p>
+              </li>
+            ))}
+          </ol>
+        </section>
+
+        <footer className="text-xs text-[color:var(--muted)]">
+          <p>Planning docs: `PLAN.md`, `TODO.md`, and `AGENTS.md`.</p>
+          <p>Target implementation: `/org/[slug]` dashboards with Supabase auth and RLS.</p>
+        </footer>
       </section>
     </main>
   );

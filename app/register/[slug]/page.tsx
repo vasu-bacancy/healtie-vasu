@@ -2,6 +2,11 @@ import Link from "next/link";
 
 import { createAdminClient } from "@/lib/supabase/admin";
 import RegisterForm from "@/components/register/RegisterForm";
+import {
+  EmptyState,
+  inlineActionClassName,
+} from "@/components/ui/app-kit";
+import { PublicShell } from "@/components/ui/public-shell";
 
 export default async function RegisterPage({
   params,
@@ -20,54 +25,58 @@ export default async function RegisterPage({
 
   if (!org) {
     return (
-      <main className="app-shell min-h-screen">
-        <section className="grid-line mx-auto flex min-h-screen w-full max-w-xl flex-col items-center justify-center gap-6 px-6 py-8 sm:px-8 lg:px-12">
-          <div className="w-full rounded-[2rem] border border-[color:var(--border)] bg-[color:var(--surface)] px-8 py-10 shadow-[0_25px_70px_rgba(24,33,43,0.12)] text-center">
-            <p className="text-xs font-semibold uppercase tracking-[0.3em] text-[color:#c13b3b]">
-              Invalid link
-            </p>
-            <h1 className="mt-4 text-2xl font-semibold text-[color:var(--foreground)]">
-              We couldn&apos;t open this registration link
-            </h1>
-            <p className="mt-2 text-sm text-[color:var(--muted)]">
-              This registration link is missing or no longer active. Contact your clinic for a current invite link.
-            </p>
-            <Link
-              href="/sign-in"
-              className="mt-6 inline-block text-sm font-semibold text-[color:var(--accent)] hover:underline"
-            >
+      <PublicShell
+        eyebrow="Patient registration"
+        title="This invite link is no longer active."
+        description="Ask the clinic team for a current invite link, or return to sign in if you already have an account."
+      >
+        <EmptyState
+          title="We couldn’t open this registration link."
+          description="This registration link is missing or no longer active. Contact your clinic for a fresh invite."
+          action={
+            <Link href="/sign-in" className={inlineActionClassName}>
               Back to sign in
             </Link>
-          </div>
-        </section>
-      </main>
+          }
+          className="min-h-[24rem]"
+        />
+      </PublicShell>
     );
   }
 
   return (
-    <main className="app-shell min-h-screen">
-      <section className="grid-line mx-auto flex min-h-screen w-full max-w-xl flex-col items-center justify-center gap-6 px-6 py-8 sm:px-8 lg:px-12">
-        <div className="w-full rounded-[2rem] border border-[color:var(--border)] bg-[color:var(--surface)] px-8 py-10 shadow-[0_25px_70px_rgba(24,33,43,0.12)]">
-          <p className="text-xs font-semibold uppercase tracking-[0.3em] text-[color:var(--accent-strong)]">
-            Patient registration
+    <PublicShell
+      eyebrow="Patient registration"
+      title={`Create your account for ${org.name}.`}
+      description="Once you’re signed up, you can book visits, join virtual appointments, and review your care history."
+      aside={
+        <div className="space-y-3">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-[color:var(--accent-strong)]">
+            What happens next
           </p>
-          <h1 className="mt-4 text-3xl font-semibold text-[color:var(--foreground)]">
-            Create your account for {org.name}
-          </h1>
-          <p className="mt-2 text-sm text-[color:var(--muted)]">
-            Once you&apos;re signed up, you can book visits, join virtual appointments, and review your care history.
-          </p>
-          <div className="mt-6">
-            <RegisterForm slug={slug} />
-          </div>
-          <p className="mt-6 text-center text-sm text-[color:var(--muted)]">
-            Already have an account?{" "}
-            <Link href="/sign-in" className="font-semibold text-[color:var(--accent)] hover:underline">
-              Sign in
-            </Link>
+          <p className="text-sm leading-6 text-[color:var(--accent-ink)]">
+            Finish registration once, then return any time to book care, join the visit room, and keep your intake details current.
           </p>
         </div>
-      </section>
-    </main>
+      }
+    >
+      <div className="space-y-6">
+        <div className="space-y-2">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.3em] text-[color:var(--accent-strong)]">
+            Account details
+          </p>
+          <h2 className="font-[family-name:var(--font-display)] text-3xl leading-none tracking-[-0.04em] text-[color:var(--foreground)]">
+            Build your patient profile.
+          </h2>
+        </div>
+        <RegisterForm slug={slug} />
+        <p className="text-center text-sm text-[color:var(--muted)]">
+          Already have an account?{" "}
+          <Link href="/sign-in" className={inlineActionClassName}>
+            Sign in
+          </Link>
+        </p>
+      </div>
+    </PublicShell>
   );
 }

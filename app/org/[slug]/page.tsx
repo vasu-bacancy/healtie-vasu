@@ -5,8 +5,27 @@ import { format } from "date-fns";
 import { createClient } from "@/lib/supabase/server";
 import { ensureProfileForUser, getActiveMembershipWithOrg } from "@/lib/supabase/tenant";
 import { getPatients } from "@/lib/db/patients";
-import { getProviders, getProviderByProfileId, getProviderAppointmentsForDate } from "@/lib/db/providers";
-import { getAppointments, getPatientAppointments, getPatientByProfileId, STATUS_LABEL, STATUS_COLOR } from "@/lib/db/appointments";
+import {
+  getProviders,
+  getProviderByProfileId,
+  getProviderAppointmentsForDate,
+} from "@/lib/db/providers";
+import {
+  getAppointments,
+  getPatientAppointments,
+  getPatientByProfileId,
+} from "@/lib/db/appointments";
+import StatusBadge from "@/components/ui/StatusBadge";
+import {
+  MetricCard,
+  Notice,
+  PageHeader,
+  SectionHeading,
+  Surface,
+  inlineActionClassName,
+  primaryButtonClassName,
+  secondaryButtonClassName,
+} from "@/components/ui/app-kit";
 
 type PendingNoteRow = {
   id: string;
@@ -23,7 +42,9 @@ export default async function OrgDashboardPage({
   const { slug } = await params;
   const supabase = await createClient();
 
-  const { data: { user } } = await supabase.auth.getUser();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
   if (!user) redirect("/sign-in");
 
   const profile = await ensureProfileForUser(supabase, user);
@@ -35,7 +56,6 @@ export default async function OrgDashboardPage({
   const today = new Date().toISOString().slice(0, 10);
   const now = new Date();
 
-  // ── Org Admin ──────────────────────────────────────────────────────────────
   if (role === "org_admin") {
     const [patients, providers, appointments] = await Promise.all([
       getPatients(supabase, orgId),
@@ -43,73 +63,84 @@ export default async function OrgDashboardPage({
       getAppointments(supabase, orgId),
     ]);
 
-    const activePatients = patients.filter((p) => p.status === "active").length;
-    const pendingIntake = patients.filter((p) => !p.intake_completed).length;
+    const activePatients = patients.filter((patient) => patient.status === "active").length;
+    const pendingIntake = patients.filter((patient) => !patient.intake_completed).length;
     const upcoming = appointments.filter(
-      (a) => new Date(a.scheduled_start) >= now && a.status !== "cancelled",
+      (appointment) =>
+        new Date(appointment.scheduled_start) >= now && appointment.status !== "cancelled",
     );
     const nextFive = upcoming.slice(0, 5);
 
     return (
       <section className="space-y-6">
-        <header className="border-b border-[color:var(--border)] pb-6">
-          <p className="text-sm font-semibold text-[color:var(--muted)]">{membership.organization.name}</p>
-          <h1 className="mt-1 text-3xl font-semibold tracking-tight text-[color:var(--foreground)]">Clinic dashboard</h1>
-          <p className="mt-2 text-sm text-[color:var(--muted)]">
-            Track your patient volume, provider coverage, and the next scheduled visits.
-          </p>
-        </header>
+        <PageHeader
+          eyebrow={membership.organization.name}
+          title="Clinic dashboard"
+          description="Track patient volume, provider coverage, and the visits that need the team’s attention next."
+        />
 
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          <StatCard title="Active patients" value={activePatients} href={`/org/${slug}/patients`} />
-          <StatCard title="Providers" value={providers.length} href={`/org/${slug}/providers`} />
-          <StatCard title="Upcoming appointments" value={upcoming.length} href={`/org/${slug}/appointments`} />
-          <StatCard title="Pending intake" value={pendingIntake} href={`/org/${slug}/patients`} accent={pendingIntake > 0} />
+        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+          <MetricCard
+            label="Active patients"
+            value={activePatients}
+            hint="Patients with a current chart in this organization."
+            href={`/org/${slug}/patients`}
+          />
+          <MetricCard
+            label="Providers"
+            value={providers.length}
+            hint="Clinicians available for booking."
+            href={`/org/${slug}/providers`}
+          />
+          <MetricCard
+            label="Upcoming visits"
+            value={upcoming.length}
+            hint="Booked appointments that are still ahead."
+            href={`/org/${slug}/appointments`}
+          />
+          <MetricCard
+            label="Pending intake"
+            value={pendingIntake}
+            hint="Patients who still need chart details before care."
+            href={`/org/${slug}/patients`}
+            tone={pendingIntake > 0 ? "warning" : "default"}
+          />
         </div>
 
-        <div className="rounded-[1.5rem] border border-[color:var(--border)] bg-white p-6 space-y-4">
-          <div className="flex items-center justify-between">
-            <h2 className="text-xs font-semibold uppercase tracking-[0.2em] text-[color:var(--muted)]">Upcoming appointments</h2>
-            <Link href={`/org/${slug}/appointments`} className="text-xs font-semibold text-[color:var(--accent)] hover:underline">See all appointments</Link>
+        <Surface className="space-y-5">
+          <div className="flex items-start justify-between gap-4">
+            <SectionHeading
+              label="Queue"
+              title="Upcoming appointments"
+              description="Review the next scheduled visits without opening the full appointment list."
+            />
+            <Link href={`/org/${slug}/appointments`} className={inlineActionClassName}>
+              See all appointments
+            </Link>
           </div>
-          {nextFive.length === 0 ? (
-            <p className="text-sm text-[color:var(--muted)]">
-              No appointments are scheduled yet. New bookings will appear here automatically.
-            </p>
-          ) : (
-            <ul className="divide-y divide-[color:var(--border)]">
-              {nextFive.map((appt) => (
-                <li key={appt.id} className="flex items-center justify-between py-3 text-sm">
-                  <div>
-                    <p className="font-semibold text-[color:var(--foreground)]">{appt.patient.full_name}</p>
-                    <p className="text-xs text-[color:var(--muted)]">
-                      {format(new Date(appt.scheduled_start), "MMM d, h:mm a")} · {appt.provider.profile?.full_name ?? "—"}
-                    </p>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <span className={`inline-flex rounded-full px-2 py-0.5 text-xs font-semibold ${STATUS_COLOR[appt.status]}`}>
-                      {STATUS_LABEL[appt.status]}
-                    </span>
-                    <Link href={`/org/${slug}/appointments/${appt.id}`} className="text-xs font-semibold text-[color:var(--accent)] hover:underline">Review visit</Link>
-                  </div>
-                </li>
-              ))}
-            </ul>
-          )}
-        </div>
+          <AppointmentList
+            items={nextFive.map((appointment) => ({
+              id: appointment.id,
+              title: appointment.patient.full_name,
+              subtitle: `${format(new Date(appointment.scheduled_start), "MMM d, h:mm a")} · ${appointment.provider.profile?.full_name ?? "—"}`,
+              status: appointment.status,
+              href: `/org/${slug}/appointments/${appointment.id}`,
+              actionLabel: "Review visit",
+            }))}
+            emptyText="No appointments are scheduled yet. New bookings will appear here automatically."
+          />
+        </Surface>
       </section>
     );
   }
 
-  // ── Provider ───────────────────────────────────────────────────────────────
   if (role === "provider") {
     const provider = await getProviderByProfileId(supabase, profile.id, orgId);
 
-    const todayAppts = provider
+    const todayAppointments = provider
       ? await getProviderAppointmentsForDate(supabase, provider.id, orgId, today)
       : [];
 
-    // Unsigned notes for this provider
     const { data: pendingNotes } = provider
       ? await supabase
           .from("clinical_notes")
@@ -129,208 +160,264 @@ export default async function OrgDashboardPage({
 
     return (
       <section className="space-y-6">
-        <header className="border-b border-[color:var(--border)] pb-6">
-          <p className="text-sm font-semibold text-[color:var(--muted)]">{membership.organization.name}</p>
-          <h1 className="mt-1 text-3xl font-semibold tracking-tight text-[color:var(--foreground)]">
-            Today&apos;s schedule
-          </h1>
-          <p className="text-sm text-[color:var(--muted)]">{format(now, "EEEE, MMMM d, yyyy")}</p>
-          <p className="text-sm text-[color:var(--muted)]">
-            Start visits from this list, then finish any unsigned notes before you end the day.
-          </p>
-        </header>
+        <PageHeader
+          eyebrow={membership.organization.name}
+          title="Today’s schedule"
+          description="Start visits from this queue, then finish any unsigned notes before the day closes."
+          meta={
+            <p className="text-sm text-[color:var(--muted)]">
+              {format(now, "EEEE, MMMM d, yyyy")}
+            </p>
+          }
+        />
 
         <div className="grid gap-4 sm:grid-cols-2">
-          <StatCard title="Visits today" value={todayAppts.length} href={`/org/${slug}/appointments`} />
-          <StatCard title="Notes to sign" value={pendingNotes?.length ?? 0} href={`/org/${slug}/appointments`} accent={(pendingNotes?.length ?? 0) > 0} />
+          <MetricCard
+            label="Visits today"
+            value={todayAppointments.length}
+            hint="Scheduled visits in today’s clinic queue."
+            href={`/org/${slug}/appointments`}
+          />
+          <MetricCard
+            label="Notes to sign"
+            value={pendingNotes?.length ?? 0}
+            hint="Unsigned notes waiting to be filed."
+            href={`/org/${slug}/appointments`}
+            tone={(pendingNotes?.length ?? 0) > 0 ? "warning" : "default"}
+          />
         </div>
 
-        <div className="rounded-[1.5rem] border border-[color:var(--border)] bg-white p-6 space-y-4">
-          <div className="flex items-center justify-between">
-            <h2 className="text-xs font-semibold uppercase tracking-[0.2em] text-[color:var(--muted)]">Today&apos;s appointments</h2>
-            <Link href={`/org/${slug}/appointments`} className="text-xs font-semibold text-[color:var(--accent)] hover:underline">See all appointments</Link>
+        <Surface className="space-y-5">
+          <div className="flex items-start justify-between gap-4">
+            <SectionHeading
+              label="Queue"
+              title="Today’s appointments"
+              description="Jump straight into the room when it is time to start the visit."
+            />
+            <Link href={`/org/${slug}/appointments`} className={inlineActionClassName}>
+              See all appointments
+            </Link>
           </div>
-          {todayAppts.length === 0 ? (
-            <p className="text-sm text-[color:var(--muted)]">
-              Your schedule is clear today. New visits will show up here as soon as they are booked.
-            </p>
-          ) : (
-            <ul className="divide-y divide-[color:var(--border)]">
-              {todayAppts.map((appt) => (
-                <li key={appt.id} className="flex items-center justify-between py-3 text-sm">
-                  <div>
-                    <p className="font-semibold text-[color:var(--foreground)]">
-                      {format(new Date(appt.scheduled_start), "h:mm a")} – {format(new Date(appt.scheduled_end), "h:mm a")}
-                    </p>
-                    <p className="text-xs text-[color:var(--muted)]">{appt.reason ?? "No reason provided"}</p>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <span className={`inline-flex rounded-full px-2 py-0.5 text-xs font-semibold ${STATUS_COLOR[appt.status]}`}>
-                      {STATUS_LABEL[appt.status]}
-                    </span>
-                    <Link href={`/org/${slug}/appointments/${appt.id}/room`} className="text-xs font-semibold text-[color:var(--accent)] hover:underline">
-                      Open room
-                    </Link>
-                  </div>
-                </li>
-              ))}
-            </ul>
-          )}
-        </div>
+          <AppointmentList
+            items={todayAppointments.map((appointment) => ({
+              id: appointment.id,
+              title: `${format(new Date(appointment.scheduled_start), "h:mm a")} – ${format(new Date(appointment.scheduled_end), "h:mm a")}`,
+              subtitle: appointment.reason ?? "No reason provided",
+              status: appointment.status,
+              href: `/org/${slug}/appointments/${appointment.id}/room`,
+              actionLabel: "Open room",
+            }))}
+            emptyText="Your schedule is clear today. New visits will show up here as soon as they are booked."
+          />
+        </Surface>
 
-        {(pendingNotes?.length ?? 0) > 0 && (
-          <div className="rounded-[1.5rem] border border-amber-200 bg-amber-50 p-6 space-y-4">
-            <h2 className="text-xs font-semibold uppercase tracking-[0.2em] text-amber-700">Finish notes</h2>
-            <p className="text-sm text-amber-800">
-              Sign these notes so they appear in the patient chart.
-            </p>
-            <ul className="divide-y divide-amber-200">
+        {(pendingNotes?.length ?? 0) > 0 ? (
+          <Surface tone="warning" className="space-y-5">
+            <SectionHeading
+              label="Documentation"
+              title="Finish notes"
+              description="Sign these notes so they appear in the patient chart."
+            />
+            <ul className="divide-y divide-[color:rgba(217,119,6,0.16)]">
               {noteRows.map((note) => (
-                <li key={note.id} className="flex items-center justify-between py-3 text-sm">
+                <li key={note.id} className="flex items-center justify-between gap-4 py-4 text-sm">
                   <div>
-                    <p className="font-semibold text-[color:var(--foreground)]">
-                      {note.patientName}
-                    </p>
-                    <p className="text-xs text-amber-700">
+                    <p className="font-semibold text-[color:var(--foreground)]">{note.patientName}</p>
+                    <p className="text-xs text-[color:var(--warning-ink)]">
                       Created {format(new Date(note.created_at), "MMM d, h:mm a")}
                     </p>
                   </div>
-                  {note.appointmentId && (
+                  {note.appointmentId ? (
                     <Link
                       href={`/org/${slug}/appointments/${note.appointmentId}/note`}
-                      className="text-xs font-semibold text-[color:var(--accent)] hover:underline"
+                      className={inlineActionClassName}
                     >
                       Finish note
                     </Link>
-                  )}
+                  ) : null}
                 </li>
               ))}
             </ul>
-          </div>
-        )}
+          </Surface>
+        ) : null}
       </section>
     );
   }
 
-  // ── Patient ────────────────────────────────────────────────────────────────
   const patient = await getPatientByProfileId(supabase, profile.id, orgId);
-  const allAppts = patient ? await getPatientAppointments(supabase, patient.id, orgId) : [];
-
-  const upcomingAppts = allAppts.filter(
-    (a) => new Date(a.scheduled_start) >= now && a.status !== "cancelled",
+  const allAppointments = patient ? await getPatientAppointments(supabase, patient.id, orgId) : [];
+  const upcomingAppointments = allAppointments.filter(
+    (appointment) =>
+      new Date(appointment.scheduled_start) >= now && appointment.status !== "cancelled",
   );
-  const nextAppt = upcomingAppts[0] ?? null;
-  const pastAppts = allAppts.filter((a) => new Date(a.scheduled_start) < now).length;
+  const nextAppointment = upcomingAppointments[0] ?? null;
+  const pastVisits = allAppointments.filter(
+    (appointment) => new Date(appointment.scheduled_start) < now,
+  ).length;
+  const firstName = profile.full_name ? profile.full_name.split(" ")[0] : "";
 
   return (
     <section className="space-y-6">
-      <header className="border-b border-[color:var(--border)] pb-6">
-        <p className="text-sm font-semibold text-[color:var(--muted)]">{membership.organization.name}</p>
-        <h1 className="mt-1 text-3xl font-semibold tracking-tight text-[color:var(--foreground)]">
-          Welcome back{profile.full_name ? `, ${profile.full_name.split(" ")[0]}` : ""}
-        </h1>
-        <p className="mt-2 text-sm text-[color:var(--muted)]">
-          Book your next visit, join when it&apos;s time, and keep your intake details up to date.
-        </p>
-      </header>
+      <PageHeader
+        eyebrow={membership.organization.name}
+        title={`Welcome back${firstName ? `, ${firstName}` : ""}`}
+        description="Book your next visit, join when it’s time, and keep your intake details current so the care team can prepare."
+      />
 
-      {patient && !patient.intake_completed && (
-        <div className="rounded-[1.25rem] border border-amber-200 bg-amber-50 px-5 py-4 flex items-center justify-between gap-4">
-          <p className="text-sm text-amber-800">
-            <strong>Finish intake</strong> so your care team has the details they need before your first visit.
+      {patient && !patient.intake_completed ? (
+        <Notice tone="warning" className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <p>
+            <strong>Finish intake.</strong> Your care team needs your current details before the first visit.
           </p>
-          <a
-            href={`/org/${slug}/profile`}
-            className="shrink-0 rounded-[1rem] bg-amber-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-amber-700"
-          >
+          <Link href={`/org/${slug}/profile`} className={primaryButtonClassName}>
             Finish intake
-          </a>
-        </div>
-      )}
+          </Link>
+        </Notice>
+      ) : null}
 
       <div className="grid gap-4 sm:grid-cols-2">
-        <StatCard title="Upcoming visits" value={upcomingAppts.length} href={`/org/${slug}/appointments`} />
-        <StatCard title="Past visits" value={pastAppts} href={`/org/${slug}/appointments`} />
+        <MetricCard
+          label="Upcoming visits"
+          value={upcomingAppointments.length}
+          hint="Appointments you can still join or review."
+          href={`/org/${slug}/appointments`}
+        />
+        <MetricCard
+          label="Past visits"
+          value={pastVisits}
+          hint="Completed visits already on record."
+          href={`/org/${slug}/appointments`}
+        />
       </div>
 
-      {/* Next appointment */}
-      {nextAppt ? (
-        <div className="rounded-[1.5rem] border border-[color:var(--border)] bg-white p-6 space-y-4">
-          <h2 className="text-xs font-semibold uppercase tracking-[0.2em] text-[color:var(--muted)]">Your next visit</h2>
-          <div className="space-y-1">
-            <p className="text-lg font-semibold text-[color:var(--foreground)]">
-              {format(new Date(nextAppt.scheduled_start), "EEEE, MMMM d")}
+      {nextAppointment ? (
+        <Surface tone="accent" className="space-y-5">
+          <SectionHeading
+            label="Next visit"
+            title={format(new Date(nextAppointment.scheduled_start), "EEEE, MMMM d")}
+            description={`${format(new Date(nextAppointment.scheduled_start), "h:mm a")} – ${format(new Date(nextAppointment.scheduled_end), "h:mm a")} · ${nextAppointment.provider.profile?.full_name ?? "Provider"}`}
+          />
+          {nextAppointment.reason ? (
+            <p className="text-sm leading-6 text-[color:var(--accent-ink)]">
+              Reason: {nextAppointment.reason}
             </p>
-            <p className="text-sm text-[color:var(--muted)]">
-              {format(new Date(nextAppt.scheduled_start), "h:mm a")} – {format(new Date(nextAppt.scheduled_end), "h:mm a")}
-              {" · "}{nextAppt.provider.profile?.full_name ?? "Provider"}
-            </p>
-            {nextAppt.reason && (
-              <p className="text-sm text-[color:var(--muted)]">Reason: {nextAppt.reason}</p>
-            )}
-          </div>
-          <div className="flex gap-3">
-            {nextAppt.meeting_url && (
+          ) : null}
+          <div className="flex flex-wrap gap-3">
+            {nextAppointment.meeting_url ? (
               <a
-                href={nextAppt.meeting_url}
+                href={nextAppointment.meeting_url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="rounded-[1rem] bg-emerald-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-emerald-700"
+                className={primaryButtonClassName}
               >
                 Join video visit
               </a>
-            )}
+            ) : null}
             <Link
-              href={`/org/${slug}/appointments/${nextAppt.id}`}
-              className="rounded-[1rem] border border-[color:var(--border)] px-4 py-2.5 text-sm font-semibold text-[color:var(--foreground)] transition hover:bg-[color:var(--surface-strong)]"
+              href={`/org/${slug}/appointments/${nextAppointment.id}`}
+              className={secondaryButtonClassName}
             >
               View appointment
             </Link>
           </div>
-        </div>
+        </Surface>
       ) : (
-        <div className="rounded-[1.5rem] border border-[color:var(--border)] bg-white p-6 space-y-3">
-          <h2 className="text-xs font-semibold uppercase tracking-[0.2em] text-[color:var(--muted)]">Your next visit</h2>
-          <p className="text-sm text-[color:var(--muted)]">
-            You don&apos;t have an upcoming visit yet. Book an appointment to choose a time that works for you.
-          </p>
-          <Link
-            href={`/org/${slug}/appointments/new`}
-            className="inline-block rounded-[1rem] bg-[color:var(--accent)] px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-[color:var(--accent-strong)]"
-          >
+        <Surface className="space-y-4">
+          <SectionHeading
+            label="Next visit"
+            title="Nothing is booked yet."
+            description="Book an appointment to choose a time that works for you."
+          />
+          <Link href={`/org/${slug}/appointments/new`} className={primaryButtonClassName}>
             Book appointment
           </Link>
-        </div>
+        </Surface>
       )}
 
-      {/* Quick links */}
-      {patient && (
-        <div className="grid gap-3 sm:grid-cols-2">
-          <Link
+      {patient ? (
+        <div className="grid gap-4 md:grid-cols-2">
+          <QuickLinkCard
             href={`/org/${slug}/patients/${patient.id}`}
-            className="rounded-[1.5rem] border border-[color:var(--border)] bg-white p-5 transition hover:bg-[color:var(--surface)]"
-          >
-            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[color:var(--muted)]">My chart</p>
-            <p className="mt-2 text-sm font-semibold text-[color:var(--foreground)]">Review your health record</p>
-            <p className="mt-1 text-xs text-[color:var(--muted)]">See allergies, medications, and signed notes.</p>
-          </Link>
-          <Link
+            label="My chart"
+            title="Review your health record"
+            description="See allergies, medications, and signed notes."
+          />
+          <QuickLinkCard
             href={`/org/${slug}/appointments/new`}
-            className="rounded-[1.5rem] border border-[color:var(--border)] bg-white p-5 transition hover:bg-[color:var(--surface)]"
-          >
-            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[color:var(--muted)]">Appointments</p>
-            <p className="mt-2 text-sm font-semibold text-[color:var(--foreground)]">Schedule an appointment</p>
-            <p className="mt-1 text-xs text-[color:var(--muted)]">Choose an open time with your provider.</p>
-          </Link>
+            label="Appointments"
+            title="Schedule an appointment"
+            description="Choose an open time with your provider."
+          />
         </div>
-      )}
+      ) : null}
     </section>
   );
 }
 
-function extractPatientName(
-  patient: PendingNoteRow["patient"],
-) {
+function AppointmentList({
+  items,
+  emptyText,
+}: {
+  items: Array<{
+    id: string;
+    title: string;
+    subtitle: string;
+    status: string;
+    href: string;
+    actionLabel: string;
+  }>;
+  emptyText: string;
+}) {
+  if (items.length === 0) {
+    return <p className="text-sm leading-6 text-[color:var(--muted)]">{emptyText}</p>;
+  }
+
+  return (
+    <ul className="divide-y divide-[color:var(--border)]">
+      {items.map((item) => (
+        <li key={item.id} className="flex items-center justify-between gap-4 py-4 text-sm">
+          <div>
+            <p className="font-semibold text-[color:var(--foreground)]">{item.title}</p>
+            <p className="text-xs leading-5 text-[color:var(--muted)]">{item.subtitle}</p>
+          </div>
+          <div className="flex items-center gap-3">
+            <StatusBadge status={item.status} className="px-2 py-0.5" />
+            <Link href={item.href} className={inlineActionClassName}>
+              {item.actionLabel}
+            </Link>
+          </div>
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+function QuickLinkCard({
+  href,
+  label,
+  title,
+  description,
+}: {
+  href: string;
+  label: string;
+  title: string;
+  description: string;
+}) {
+  return (
+    <Link
+      href={href}
+      className="motion-lift block rounded-[1.75rem] border border-[color:var(--border)] bg-[color:var(--surface)] p-5 shadow-[0_24px_50px_rgba(24,33,43,0.06)] transition hover:bg-[color:var(--surface-subtle)]"
+    >
+      <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-[color:var(--muted)]">
+        {label}
+      </p>
+      <p className="mt-3 text-base font-semibold text-[color:var(--foreground)]">{title}</p>
+      <p className="mt-2 text-sm leading-6 text-[color:var(--muted)]">{description}</p>
+    </Link>
+  );
+}
+
+function extractPatientName(patient: PendingNoteRow["patient"]) {
   if (Array.isArray(patient)) {
     return patient[0]?.full_name ?? "Unknown patient";
   }
@@ -338,42 +425,10 @@ function extractPatientName(
   return patient?.full_name ?? "Unknown patient";
 }
 
-function extractAppointmentId(
-  encounter: PendingNoteRow["encounter"],
-) {
+function extractAppointmentId(encounter: PendingNoteRow["encounter"]) {
   if (Array.isArray(encounter)) {
     return encounter[0]?.appointment_id ?? null;
   }
 
   return encounter?.appointment_id ?? null;
-}
-
-function StatCard({
-  title,
-  value,
-  href,
-  accent = false,
-}: {
-  title: string;
-  value: number;
-  href: string;
-  accent?: boolean;
-}) {
-  return (
-    <Link
-      href={href}
-      className={`rounded-[1.5rem] border px-6 py-5 shadow-[0_12px_40px_rgba(24,33,43,0.06)] transition hover:shadow-md ${
-        accent
-          ? "border-amber-200 bg-amber-50"
-          : "border-[color:var(--border)] bg-white"
-      }`}
-    >
-      <p className={`text-xs font-semibold uppercase tracking-[0.25em] ${accent ? "text-amber-700" : "text-[color:var(--muted)]"}`}>
-        {title}
-      </p>
-      <p className={`mt-3 text-3xl font-semibold ${accent ? "text-amber-800" : "text-[color:var(--foreground)]"}`}>
-        {value}
-      </p>
-    </Link>
-  );
 }

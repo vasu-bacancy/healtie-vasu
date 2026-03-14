@@ -4,6 +4,14 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { ensureProfileForUser, getActiveMembershipWithOrg } from "@/lib/supabase/tenant";
 import { createProvider } from "../actions";
+import {
+  FormField,
+  PageHeader,
+  Surface,
+  controlClassName,
+  primaryButtonClassName,
+  secondaryButtonClassName,
+} from "@/components/ui/app-kit";
 
 const TIMEZONES = [
   "UTC",
@@ -36,117 +44,76 @@ export default async function NewProviderPage({
 
   return (
     <section className="space-y-6">
-      <header className="flex items-center gap-4 border-b border-[color:var(--border)] pb-6">
-        <Link
-          href={`/org/${slug}/providers`}
-          className="text-sm text-[color:var(--muted)] hover:text-[color:var(--foreground)]"
-        >
-          ← Providers
-        </Link>
-        <h1 className="text-3xl font-semibold tracking-tight text-[color:var(--foreground)]">
-          Create provider account
-        </h1>
-        <p className="text-sm text-[color:var(--muted)]">
-          Invite a provider so they can sign in, set availability, and document visits.
-        </p>
-      </header>
+      <PageHeader
+        backHref={`/org/${slug}/providers`}
+        backLabel="Providers"
+        title="Create provider account"
+        description="Invite a provider so they can sign in, set availability, and document visits."
+      />
 
       <div className="mx-auto max-w-xl">
         <form action={createProvider} className="space-y-4">
-
-          {/* Account */}
-          <div className="rounded-[1.5rem] border border-[color:var(--border)] bg-white p-6 space-y-4">
-            <h2 className="text-xs font-semibold uppercase tracking-[0.2em] text-[color:var(--muted)]">
+          <Surface className="space-y-5">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-[color:var(--muted)]">
               Account
-            </h2>
+            </p>
 
-            <Field label="Full name" required>
-              <input name="full_name" type="text" required placeholder="Dr. Jane Smith"
-                className={inputCls} />
-            </Field>
+            <FormField label="Full name" required>
+              <input name="full_name" type="text" required placeholder="Dr. Jane Smith" className={controlClassName()} />
+            </FormField>
 
-            <Field label="Email address" required>
-              <input name="email" type="email" required placeholder="jane@clinic.com"
-                className={inputCls} />
-            </Field>
+            <FormField label="Email address" required>
+              <input name="email" type="email" required placeholder="jane@clinic.com" className={controlClassName()} />
+            </FormField>
 
-            <Field label="Temporary password" required hint="Provider can change this after first sign-in.">
-              <input name="password" type="password" required minLength={8} placeholder="Min. 8 characters"
-                className={inputCls} />
-            </Field>
-          </div>
+            <FormField label="Temporary password" required hint="Provider can change this after first sign-in.">
+              <input
+                name="password"
+                type="password"
+                required
+                minLength={8}
+                placeholder="Min. 8 characters"
+                className={controlClassName()}
+              />
+            </FormField>
+          </Surface>
 
-          {/* Professional */}
-          <div className="rounded-[1.5rem] border border-[color:var(--border)] bg-white p-6 space-y-4">
-            <h2 className="text-xs font-semibold uppercase tracking-[0.2em] text-[color:var(--muted)]">
+          <Surface className="space-y-5">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-[color:var(--muted)]">
               Professional details
-            </h2>
+            </p>
 
-            <Field label="Specialty">
-              <input name="specialty" type="text" placeholder="e.g. Primary Care"
-                className={inputCls} />
-            </Field>
+            <FormField label="Specialty">
+              <input name="specialty" type="text" placeholder="e.g. Primary Care" className={controlClassName()} />
+            </FormField>
 
-            <Field label="License number">
-              <input name="license_number" type="text" placeholder="e.g. MD-123456"
-                className={inputCls} />
-            </Field>
+            <FormField label="License number">
+              <input name="license_number" type="text" placeholder="e.g. MD-123456" className={controlClassName()} />
+            </FormField>
 
-            <Field label="Timezone" required>
-              <select name="timezone" defaultValue="UTC" className={inputCls}>
+            <FormField label="Timezone" required>
+              <select name="timezone" defaultValue="UTC" className={controlClassName()}>
                 {TIMEZONES.map((tz) => (
                   <option key={tz} value={tz}>{tz}</option>
                 ))}
               </select>
-            </Field>
+            </FormField>
 
-            <Field label="Bio">
-              <textarea name="bio" rows={3} placeholder="Brief professional bio…"
-                className={`${inputCls} resize-none`} />
-            </Field>
-          </div>
+            <FormField label="Bio">
+              <textarea name="bio" rows={3} placeholder="Brief professional bio…" className={`${controlClassName()} resize-none`} />
+            </FormField>
+          </Surface>
 
           <div className="flex gap-3 justify-end">
-            <Link
-              href={`/org/${slug}/providers`}
-              className="rounded-[1rem] border border-[color:var(--border)] px-4 py-2.5 text-sm font-semibold text-[color:var(--foreground)] transition hover:bg-[color:var(--surface-strong)]"
-            >
+            <Link href={`/org/${slug}/providers`} className={secondaryButtonClassName}>
               Cancel
             </Link>
-            <button
-              type="submit"
-              className="rounded-[1rem] bg-[color:var(--accent)] px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-[color:var(--accent-strong)]"
-            >
+            <button type="submit" className={primaryButtonClassName}>
               Create provider account
             </button>
           </div>
         </form>
       </div>
     </section>
-  );
-}
-
-const inputCls =
-  "w-full rounded-xl border border-[color:var(--border)] bg-transparent px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[color:var(--accent)]";
-
-function Field({
-  label,
-  required,
-  hint,
-  children,
-}: {
-  label: string;
-  required?: boolean;
-  hint?: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <div className="space-y-1">
-      <label className="text-sm font-semibold text-[color:var(--foreground)]">
-        {label}{required && <span className="ml-0.5 text-[color:#c13b3b]"> *</span>}
-      </label>
-      {children}
-      {hint && <p className="text-xs text-[color:var(--muted)]">{hint}</p>}
-    </div>
   );
 }

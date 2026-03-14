@@ -4,9 +4,20 @@ import { format } from "date-fns";
 
 import { createClient } from "@/lib/supabase/server";
 import { ensureProfileForUser, getActiveMembershipWithOrg } from "@/lib/supabase/tenant";
-import { getAppointment, STATUS_LABEL, STATUS_COLOR } from "@/lib/db/appointments";
+import { getAppointment } from "@/lib/db/appointments";
 import { getEncounterByAppointmentId } from "@/lib/db/encounters";
 import { updateAppointmentStatus } from "../../actions";
+import StatusBadge from "@/components/ui/StatusBadge";
+import {
+  KeyValueRow,
+  Notice,
+  PageHeader,
+  SectionHeading,
+  Surface,
+  inlineActionClassName,
+  primaryButtonClassName,
+  secondaryButtonClassName,
+} from "@/components/ui/app-kit";
 
 const STATUS_TRANSITIONS: Record<string, { label: string; next: string }[]> = {
   scheduled: [{ label: "Check in patient", next: "checked_in" }],
@@ -33,10 +44,10 @@ export default async function VisitRoomPage({
   const membership = await getActiveMembershipWithOrg(supabase, profile.id);
   if (!membership) redirect("/sign-in");
 
-  const appt = await getAppointment(supabase, id, membership.organization_id).catch(
+  const appointment = await getAppointment(supabase, id, membership.organization_id).catch(
     () => null,
   );
-  if (!appt) notFound();
+  if (!appointment) notFound();
 
   const encounter = await getEncounterByAppointmentId(
     supabase,
@@ -45,217 +56,166 @@ export default async function VisitRoomPage({
   );
 
   const canManage = membership.role === "org_admin" || membership.role === "provider";
-  const transitions = canManage ? (STATUS_TRANSITIONS[appt.status] ?? []) : [];
-  const isActive = appt.status === "in_progress";
-  const isDone = appt.status === "completed" || appt.status === "cancelled";
+  const transitions = canManage ? STATUS_TRANSITIONS[appointment.status] ?? [] : [];
+  const isActive = appointment.status === "in_progress";
+  const isDone = appointment.status === "completed" || appointment.status === "cancelled";
 
   return (
     <section className="space-y-6">
-      <header className="flex items-start justify-between border-b border-[color:var(--border)] pb-6">
-        <div className="space-y-1">
-          <Link
-            href={`/org/${slug}/appointments/${id}`}
-            className="text-sm text-[color:var(--muted)] hover:text-[color:var(--foreground)]"
-          >
-            ← Appointment details
-          </Link>
-          <h1 className="text-3xl font-semibold tracking-tight text-[color:var(--foreground)]">
-            Virtual visit room
-          </h1>
-          <p className="text-sm text-[color:var(--muted)]">
-            {format(new Date(appt.scheduled_start), "EEEE, MMMM d, yyyy")} ·{" "}
-            {format(new Date(appt.scheduled_start), "h:mm a")} –{" "}
-            {format(new Date(appt.scheduled_end), "h:mm a")}
-          </p>
-        </div>
-        <span
-          className={`mt-1 inline-flex rounded-full px-3 py-1 text-xs font-semibold ${STATUS_COLOR[appt.status] ?? "bg-zinc-100 text-zinc-500"}`}
-        >
-          {STATUS_LABEL[appt.status] ?? appt.status}
-        </span>
-      </header>
+      <PageHeader
+        backHref={`/org/${slug}/appointments/${id}`}
+        backLabel="Appointment details"
+        title="Virtual visit room"
+        description={`${format(new Date(appointment.scheduled_start), "EEEE, MMMM d, yyyy")} · ${format(new Date(appointment.scheduled_start), "h:mm a")} – ${format(new Date(appointment.scheduled_end), "h:mm a")}`}
+        meta={<StatusBadge status={appointment.status} className="px-3 py-1" />}
+      />
+
+      {appointment.status === "scheduled" ? (
+        <Notice tone="accent">
+          This room is ready. Check the patient in when they arrive, then start the visit to unlock the SOAP note.
+        </Notice>
+      ) : null}
 
       <div className="grid gap-6 lg:grid-cols-3">
-        {/* Left: context + controls */}
-        <div className="lg:col-span-2 space-y-4">
-          {/* Participants */}
-          <div className="rounded-[1.5rem] border border-[color:var(--border)] bg-white p-6 space-y-3">
-            <h2 className="text-xs font-semibold uppercase tracking-[0.2em] text-[color:var(--muted)]">
+        <div className="space-y-4 lg:col-span-2">
+          <Surface className="space-y-4">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-[color:var(--muted)]">
               Participants
-            </h2>
-            <div className="flex flex-col gap-2 text-sm">
-              <div className="flex items-center justify-between">
-                <span className="text-[color:var(--muted)]">Patient</span>
+            </p>
+            <dl>
+              <KeyValueRow label="Patient">
                 {canManage ? (
-                  <Link
-                    href={`/org/${slug}/patients/${appt.patient_id}`}
-                    className="font-semibold text-[color:var(--accent)] hover:underline"
-                  >
-                    {appt.patient.full_name}
+                  <Link href={`/org/${slug}/patients/${appointment.patient_id}`} className={inlineActionClassName}>
+                    {appointment.patient.full_name}
                   </Link>
                 ) : (
-                  <span className="font-semibold text-[color:var(--foreground)]">
-                    {appt.patient.full_name}
-                  </span>
+                  appointment.patient.full_name
                 )}
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-[color:var(--muted)]">Provider</span>
-                <span className="font-semibold text-[color:var(--foreground)]">
-                  {appt.provider.profile?.full_name ?? "—"}
-                </span>
-              </div>
-              {appt.reason && (
-                <div className="flex items-start justify-between gap-4">
-                  <span className="text-[color:var(--muted)]">Visit reason</span>
-                  <span className="text-right font-medium text-[color:var(--foreground)]">
-                    {appt.reason}
-                  </span>
-                </div>
-              )}
-            </div>
-          </div>
+              </KeyValueRow>
+              <KeyValueRow label="Provider">{appointment.provider.profile?.full_name ?? "—"}</KeyValueRow>
+              {appointment.reason ? (
+                <KeyValueRow label="Visit reason" stacked>
+                  {appointment.reason}
+                </KeyValueRow>
+              ) : null}
+            </dl>
+          </Surface>
 
-          {/* Status controls */}
-          {!isDone && canManage && (
-            <div className="rounded-[1.5rem] border border-[color:var(--border)] bg-white p-6 space-y-3">
-              <h2 className="text-xs font-semibold uppercase tracking-[0.2em] text-[color:var(--muted)]">
-                Visit controls
-              </h2>
-              <p className="text-sm text-[color:var(--muted)]">
-                Update the visit status as the patient arrives, the call starts, and the visit ends.
-              </p>
+          {!isDone && canManage ? (
+            <Surface className="space-y-4">
+              <SectionHeading
+                label="Visit controls"
+                title="Move the visit forward"
+                description="Update the room state as the patient arrives, the call starts, and the encounter ends."
+              />
               {transitions.length > 0 ? (
                 <div className="flex flex-wrap gap-2">
-                  {transitions.map((t) => (
-                    <form key={t.next} action={updateAppointmentStatus}>
-                      <input type="hidden" name="id" value={appt.id} />
-                      <input type="hidden" name="status" value={t.next} />
-                      <button
-                        type="submit"
-                        className="rounded-[0.75rem] bg-[color:var(--accent)] px-4 py-2 text-sm font-semibold text-white transition hover:bg-[color:var(--accent-strong)]"
-                      >
-                        {t.label}
+                  {transitions.map((transition) => (
+                    <form key={transition.next} action={updateAppointmentStatus}>
+                      <input type="hidden" name="id" value={appointment.id} />
+                      <input type="hidden" name="status" value={transition.next} />
+                      <button type="submit" className={primaryButtonClassName}>
+                        {transition.label}
                       </button>
                     </form>
                   ))}
-                  {/* Cancel always available */}
-                  {appt.status !== "completed" && (
+                  {appointment.status !== "completed" ? (
                     <form action={updateAppointmentStatus}>
-                      <input type="hidden" name="id" value={appt.id} />
+                      <input type="hidden" name="id" value={appointment.id} />
                       <input type="hidden" name="status" value="cancelled" />
-                      <button
-                        type="submit"
-                        className="rounded-[0.75rem] border border-[color:#c13b3b] px-4 py-2 text-sm font-semibold text-[color:#c13b3b] transition hover:bg-[color:#fef2f2]"
-                      >
+                      <button type="submit" className={secondaryButtonClassName}>
                         Cancel visit
                       </button>
                     </form>
-                  )}
+                  ) : null}
                 </div>
               ) : (
-                <p className="text-sm text-[color:var(--muted)]">
+                <p className="text-sm leading-6 text-[color:var(--muted)]">
                   This visit is already in its final state.
                 </p>
               )}
-            </div>
-          )}
+            </Surface>
+          ) : null}
 
-          {/* Encounter info */}
-          {encounter && (
-            <div className="rounded-[1.5rem] border border-[color:var(--border)] bg-white p-6 space-y-3">
-              <h2 className="text-xs font-semibold uppercase tracking-[0.2em] text-[color:var(--muted)]">
+          {encounter ? (
+            <Surface className="space-y-4">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-[color:var(--muted)]">
                 Encounter
-              </h2>
-              <div className="flex flex-col gap-1 text-sm">
-                <div className="flex justify-between">
-                  <span className="text-[color:var(--muted)]">Status</span>
-                  <span className="font-semibold capitalize text-[color:var(--foreground)]">
-                    {encounter.status.replace("_", " ")}
-                  </span>
-                </div>
-                {encounter.started_at && (
-                  <div className="flex justify-between">
-                    <span className="text-[color:var(--muted)]">Started</span>
-                    <span className="font-medium text-[color:var(--foreground)]">
-                      {format(new Date(encounter.started_at), "h:mm a")}
-                    </span>
-                  </div>
-                )}
-                {encounter.ended_at && (
-                  <div className="flex justify-between">
-                    <span className="text-[color:var(--muted)]">Ended</span>
-                    <span className="font-medium text-[color:var(--foreground)]">
-                      {format(new Date(encounter.ended_at), "h:mm a")}
-                    </span>
-                  </div>
-                )}
-              </div>
-            </div>
-          )}
+              </p>
+              <dl>
+                <KeyValueRow label="Status">
+                  <span className="capitalize">{encounter.status.replace("_", " ")}</span>
+                </KeyValueRow>
+                {encounter.started_at ? (
+                  <KeyValueRow label="Started">
+                    {format(new Date(encounter.started_at), "h:mm a")}
+                  </KeyValueRow>
+                ) : null}
+                {encounter.ended_at ? (
+                  <KeyValueRow label="Ended">
+                    {format(new Date(encounter.ended_at), "h:mm a")}
+                  </KeyValueRow>
+                ) : null}
+              </dl>
+            </Surface>
+          ) : null}
         </div>
 
-        {/* Right: meeting + note */}
         <div className="space-y-4">
-          {/* Meeting link */}
-          <div className="rounded-[1.5rem] border border-[color:var(--border)] bg-white p-6 space-y-3">
-            <h2 className="text-xs font-semibold uppercase tracking-[0.2em] text-[color:var(--muted)]">
-              Video call
-            </h2>
-            {appt.meeting_url ? (
+          <Surface className="space-y-4">
+            <SectionHeading
+              label="Video call"
+              title="Join the visit"
+              description="Open the hosted call in a new tab when the patient is ready."
+            />
+            {appointment.meeting_url ? (
               <a
-                href={appt.meeting_url}
+                href={appointment.meeting_url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="block w-full rounded-[1rem] bg-emerald-600 px-4 py-3 text-center text-sm font-semibold text-white transition hover:bg-emerald-700"
+                className={`${primaryButtonClassName} flex w-full justify-center`}
               >
                 Join video visit
               </a>
             ) : (
-              <div className="space-y-2">
-                <p className="text-sm text-[color:var(--muted)]">
-                  No video link has been added yet.
-                </p>
-                {canManage && (
-                  <Link
-                    href={`/org/${slug}/appointments/${id}`}
-                    className="text-xs font-semibold text-[color:var(--accent)] hover:underline"
-                  >
-                    Go to appointment details to add a link
-                  </Link>
-                )}
-              </div>
+              <p className="text-sm leading-6 text-[color:var(--muted)]">
+                No video link has been added yet.
+              </p>
             )}
-          </div>
+            {!appointment.meeting_url && canManage ? (
+              <Link href={`/org/${slug}/appointments/${id}`} className={inlineActionClassName}>
+                Add a meeting link from appointment details
+              </Link>
+            ) : null}
+          </Surface>
 
-          {/* Clinical note shortcut */}
-          {canManage && (isActive || isDone) && encounter && (
+          {canManage && (isActive || isDone) && encounter ? (
             <Link
               href={`/org/${slug}/appointments/${id}/note`}
-              className="flex w-full flex-col items-start rounded-[1.5rem] border border-[color:var(--border)] bg-white p-6 transition hover:bg-[color:var(--surface)]"
+              className="motion-lift block rounded-[1.75rem] border border-[color:var(--border)] bg-[color:var(--surface)] p-6 shadow-[0_24px_50px_rgba(24,33,43,0.06)] transition hover:bg-[color:var(--surface-subtle)]"
             >
-              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[color:var(--muted)]">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-[color:var(--muted)]">
                 Clinical note
               </p>
-              <p className="mt-2 text-sm font-semibold text-[color:var(--foreground)]">
+              <p className="mt-3 text-base font-semibold text-[color:var(--foreground)]">
                 Open SOAP note
               </p>
-              <p className="mt-1 text-xs text-[color:var(--muted)]">
-                Capture the visit summary before you close the patient chart.
+              <p className="mt-2 text-sm leading-6 text-[color:var(--muted)]">
+                Capture the visit summary before the patient chart closes for the day.
               </p>
             </Link>
-          )}
+          ) : null}
 
-          {canManage && !encounter && !isDone && (
-            <div className="rounded-[1.5rem] border border-[color:var(--border)] bg-white p-6">
-              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[color:var(--muted)]">
+          {canManage && !encounter && !isDone ? (
+            <Surface className="space-y-2">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-[color:var(--muted)]">
                 Clinical note
               </p>
-              <p className="mt-2 text-sm text-[color:var(--muted)]">
-                Start the visit to open the SOAP note.
+              <p className="text-sm leading-6 text-[color:var(--muted)]">
+                Start the visit to unlock the SOAP note editor.
               </p>
-            </div>
-          )}
+            </Surface>
+          ) : null}
         </div>
       </div>
     </section>

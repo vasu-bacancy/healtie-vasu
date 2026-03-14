@@ -4,6 +4,14 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { ensureProfileForUser, getActiveMembershipWithOrg } from "@/lib/supabase/tenant";
 import { createPatient } from "../actions";
+import {
+  FormField,
+  PageHeader,
+  Surface,
+  controlClassName,
+  primaryButtonClassName,
+  secondaryButtonClassName,
+} from "@/components/ui/app-kit";
 
 export default async function NewPatientPage({
   params,
@@ -24,133 +32,87 @@ export default async function NewPatientPage({
 
   return (
     <section className="space-y-6">
-      <header className="flex items-center gap-4 border-b border-[color:var(--border)] pb-6">
-        <Link
-          href={`/org/${slug}/patients`}
-          className="text-sm text-[color:var(--muted)] hover:text-[color:var(--foreground)]"
-        >
-          ← Patients
-        </Link>
-        <div>
-          <h1 className="text-3xl font-semibold tracking-tight text-[color:var(--foreground)]">
-            Add a patient
-          </h1>
-          <p className="mt-2 text-sm text-[color:var(--muted)]">
-            Create a patient record so the team can schedule visits and keep clinical notes in one place.
-          </p>
-        </div>
-      </header>
+      <PageHeader
+        backHref={`/org/${slug}/patients`}
+        backLabel="Patients"
+        title="Add a patient"
+        description="Create a patient record so the team can schedule visits and keep clinical notes in one place."
+      />
 
       <div className="mx-auto max-w-xl">
         <form action={createPatient} className="space-y-4">
-          <div className="rounded-[1.5rem] border border-[color:var(--border)] bg-white p-6 space-y-4">
-            <h2 className="text-sm font-semibold uppercase tracking-[0.2em] text-[color:var(--muted)]">
+          <Surface className="space-y-5">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-[color:var(--muted)]">
               Demographics
-            </h2>
+            </p>
 
-            <div className="space-y-1">
-              <label
-                htmlFor="full_name"
-                className="text-sm font-semibold text-[color:var(--foreground)]"
-              >
-                Full name <span className="text-red-500">*</span>
-              </label>
+            <FormField label="Full name" required>
               <input
                 id="full_name"
                 name="full_name"
                 type="text"
                 required
                 placeholder="Jane Smith"
-                className="w-full rounded-xl border border-[color:var(--border)] bg-transparent px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[color:var(--accent)]"
+                className={controlClassName()}
               />
-            </div>
+            </FormField>
 
             <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-1">
-                <label
-                  htmlFor="dob"
-                  className="text-sm font-semibold text-[color:var(--foreground)]"
-                >
-                  Date of birth
-                </label>
+              <FormField label="Date of birth">
                 <input
                   id="dob"
                   name="dob"
                   type="date"
-                  className="w-full rounded-xl border border-[color:var(--border)] bg-transparent px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[color:var(--accent)]"
+                  className={controlClassName()}
                 />
-              </div>
+              </FormField>
 
-              <div className="space-y-1">
-                <label
-                  htmlFor="sex"
-                  className="text-sm font-semibold text-[color:var(--foreground)]"
-                >
-                  Sex
-                </label>
+              <FormField label="Sex">
                 <select
                   id="sex"
                   name="sex"
-                  className="w-full rounded-xl border border-[color:var(--border)] bg-transparent px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[color:var(--accent)]"
+                  className={controlClassName()}
                 >
                   <option value="">Select an option</option>
                   <option value="Male">Male</option>
                   <option value="Female">Female</option>
                   <option value="Other">Other</option>
                 </select>
-              </div>
+              </FormField>
             </div>
-          </div>
+          </Surface>
 
-          <div className="rounded-[1.5rem] border border-[color:var(--border)] bg-white p-6 space-y-4">
-            <h2 className="text-sm font-semibold uppercase tracking-[0.2em] text-[color:var(--muted)]">
+          <Surface className="space-y-5">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-[color:var(--muted)]">
               Contact
-            </h2>
+            </p>
 
-            <div className="space-y-1">
-              <label
-                htmlFor="email"
-                className="text-sm font-semibold text-[color:var(--foreground)]"
-              >
-                Email address
-              </label>
+            <FormField label="Email address">
               <input
                 id="email"
                 name="email"
                 type="email"
                 placeholder="jane@example.com"
-                className="w-full rounded-xl border border-[color:var(--border)] bg-transparent px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[color:var(--accent)]"
+                className={controlClassName()}
               />
-            </div>
+            </FormField>
 
-            <div className="space-y-1">
-              <label
-                htmlFor="phone"
-                className="text-sm font-semibold text-[color:var(--foreground)]"
-              >
-                Phone number
-              </label>
+            <FormField label="Phone number">
               <input
                 id="phone"
                 name="phone"
                 type="tel"
                 placeholder="+1 555 000 0000"
-                className="w-full rounded-xl border border-[color:var(--border)] bg-transparent px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[color:var(--accent)]"
+                className={controlClassName()}
               />
-            </div>
-          </div>
+            </FormField>
+          </Surface>
 
           <div className="flex gap-3 justify-end">
-            <Link
-              href={`/org/${slug}/patients`}
-              className="rounded-[1rem] border border-[color:var(--border)] px-4 py-2.5 text-sm font-semibold text-[color:var(--foreground)] transition hover:bg-[color:var(--surface-strong)]"
-            >
+            <Link href={`/org/${slug}/patients`} className={secondaryButtonClassName}>
               Back to patients
             </Link>
-            <button
-              type="submit"
-              className="rounded-[1rem] bg-[color:var(--accent)] px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-[color:var(--accent-strong)]"
-            >
+            <button type="submit" className={primaryButtonClassName}>
               Create patient record
             </button>
           </div>

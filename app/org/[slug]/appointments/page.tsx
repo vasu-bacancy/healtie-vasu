@@ -8,9 +8,15 @@ import {
   getAppointments,
   getPatientAppointments,
   getPatientByProfileId,
-  STATUS_LABEL,
-  STATUS_COLOR,
 } from "@/lib/db/appointments";
+import StatusBadge from "@/components/ui/StatusBadge";
+import {
+  EmptyState,
+  PageHeader,
+  TableWrap,
+  primaryButtonClassName,
+  inlineActionClassName,
+} from "@/components/ui/app-kit";
 
 export default async function AppointmentsPage({
   params,
@@ -44,66 +50,55 @@ export default async function AppointmentsPage({
 
   return (
     <section className="space-y-6">
-      <header className="flex items-center justify-between border-b border-[color:var(--border)] pb-6">
-        <div>
-          <p className="text-sm font-semibold text-[color:var(--muted)]">
-            {membership.organization.name}
-          </p>
-          <h1 className="mt-1 text-3xl font-semibold tracking-tight text-[color:var(--foreground)]">
-            Appointments
-          </h1>
-        </div>
-        {canBook && (
-          <Link
-            href={`/org/${slug}/appointments/new`}
-            className="rounded-[1rem] bg-[color:var(--accent)] px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-[color:var(--accent-strong)]"
-          >
-            Book a visit
-          </Link>
-        )}
-      </header>
+      <PageHeader
+        eyebrow={membership.organization.name}
+        title="Appointments"
+        description="Keep booking, room access, and visit status moving from one clear queue."
+        action={
+          canBook ? (
+            <Link href={`/org/${slug}/appointments/new`} className={primaryButtonClassName}>
+              Book a visit
+            </Link>
+          ) : null
+        }
+      />
 
       {appointments.length === 0 ? (
-        <div className="rounded-[1.5rem] border border-[color:var(--border)] bg-white p-12 text-center">
-          <p className="text-sm font-semibold text-[color:var(--foreground)]">
-            No appointments yet
-          </p>
-          <p className="mt-1 text-sm text-[color:var(--muted)]">
-            Book a visit to choose a provider, time, and meeting link.
-          </p>
-          <Link
-            href={`/org/${slug}/appointments/new`}
-            className="mt-5 inline-block rounded-[1rem] bg-[color:var(--accent)] px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-[color:var(--accent-strong)]"
-          >
-            Book your first visit
-          </Link>
-        </div>
+        <EmptyState
+          title="No visits are on the schedule yet."
+          description="Book a visit to choose a provider, time, and meeting link."
+          action={
+            <Link href={`/org/${slug}/appointments/new`} className={primaryButtonClassName}>
+              Book your first visit
+            </Link>
+          }
+        />
       ) : (
-        <div className="overflow-hidden rounded-[1.5rem] border border-[color:var(--border)] bg-white">
+        <TableWrap>
           <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b border-[color:var(--border)] bg-[color:var(--surface)]">
-                <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-[0.2em] text-[color:var(--muted)]">
+            <thead className="bg-[color:var(--surface-subtle)]">
+              <tr className="border-b border-[color:var(--border)]">
+                <th className="px-6 py-4 text-left text-[11px] font-semibold uppercase tracking-[0.24em] text-[color:var(--muted)]">
                   Date & time
                 </th>
                 {membership.role !== "patient" && (
-                  <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-[0.2em] text-[color:var(--muted)]">
+                  <th className="px-6 py-4 text-left text-[11px] font-semibold uppercase tracking-[0.24em] text-[color:var(--muted)]">
                     Patient
                   </th>
                 )}
-                <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-[0.2em] text-[color:var(--muted)]">
+                <th className="px-6 py-4 text-left text-[11px] font-semibold uppercase tracking-[0.24em] text-[color:var(--muted)]">
                   Provider
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-[0.2em] text-[color:var(--muted)]">
+                <th className="px-6 py-4 text-left text-[11px] font-semibold uppercase tracking-[0.24em] text-[color:var(--muted)]">
                   Status
                 </th>
-                <th className="px-6 py-3" />
+                <th className="px-6 py-4" />
               </tr>
             </thead>
             <tbody className="divide-y divide-[color:var(--border)]">
               {appointments.map((appt) => (
-                <tr key={appt.id} className="transition hover:bg-[color:var(--surface)]">
-                  <td className="px-6 py-4 text-[color:var(--foreground)]">
+                <tr key={appt.id} className="motion-lift transition hover:bg-[color:var(--surface-subtle)]">
+                  <td className="px-6 py-5 text-[color:var(--foreground)]">
                     <p className="font-medium">
                       {format(new Date(appt.scheduled_start), "MMM d, yyyy")}
                     </p>
@@ -113,25 +108,18 @@ export default async function AppointmentsPage({
                     </p>
                   </td>
                   {membership.role !== "patient" && (
-                    <td className="px-6 py-4 text-[color:var(--foreground)]">
+                    <td className="px-6 py-5 text-[color:var(--foreground)]">
                       {appt.patient.full_name}
                     </td>
                   )}
-                  <td className="px-6 py-4 text-[color:var(--muted)]">
+                  <td className="px-6 py-5 text-[color:var(--muted)]">
                     {appt.provider.profile?.full_name ?? "—"}
                   </td>
-                  <td className="px-6 py-4">
-                    <span
-                      className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-semibold ${STATUS_COLOR[appt.status] ?? "bg-zinc-100 text-zinc-500"}`}
-                    >
-                      {STATUS_LABEL[appt.status] ?? appt.status}
-                    </span>
+                  <td className="px-6 py-5">
+                    <StatusBadge status={appt.status} />
                   </td>
-                  <td className="px-6 py-4 text-right">
-                    <Link
-                      href={`/org/${slug}/appointments/${appt.id}`}
-                      className="text-xs font-semibold text-[color:var(--accent)] hover:underline"
-                    >
+                  <td className="px-6 py-5 text-right">
+                    <Link href={`/org/${slug}/appointments/${appt.id}`} className={inlineActionClassName}>
                       View appointment
                     </Link>
                   </td>
@@ -139,7 +127,7 @@ export default async function AppointmentsPage({
               ))}
             </tbody>
           </table>
-        </div>
+        </TableWrap>
       )}
     </section>
   );

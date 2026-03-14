@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { redirect } from "next/navigation";
 
 import SlotPicker from "@/components/appointments/SlotPicker";
@@ -7,6 +6,14 @@ import { ensureProfileForUser, getActiveMembershipWithOrg } from "@/lib/supabase
 import { getPatients } from "@/lib/db/patients";
 import { getProviders, getProviderAvailability, getProviderAppointmentsForDate, generateBookableSlots } from "@/lib/db/providers";
 import { bookAppointment } from "../actions";
+import {
+  FormField,
+  PageHeader,
+  Surface,
+  controlClassName,
+  primaryButtonClassName,
+  secondaryButtonClassName,
+} from "@/components/ui/app-kit";
 
 export default async function NewAppointmentPage({
   params,
@@ -52,37 +59,28 @@ export default async function NewAppointmentPage({
 
   return (
     <section className="space-y-6">
-      <header className="flex items-center gap-4 border-b border-[color:var(--border)] pb-6">
-        <Link
-          href={`/org/${slug}/appointments`}
-          className="text-sm text-[color:var(--muted)] hover:text-[color:var(--foreground)]"
-        >
-          ← Appointments
-        </Link>
-        <h1 className="text-3xl font-semibold tracking-tight text-[color:var(--foreground)]">
-          Schedule an appointment
-        </h1>
-      </header>
+      <PageHeader
+        backHref={`/org/${slug}/appointments`}
+        backLabel="Appointments"
+        title="Schedule an appointment"
+        description="Choose a provider, confirm an open slot, and file the visit details in one flow."
+      />
 
       <div className="mx-auto max-w-xl space-y-4">
-        {/* Step 1 – provider + date selector (GET form) */}
-        <div className="rounded-[1.5rem] border border-[color:var(--border)] bg-white p-6 space-y-4">
-          <h2 className="text-xs font-semibold uppercase tracking-[0.2em] text-[color:var(--muted)]">
+        <Surface className="space-y-5">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-[color:var(--muted)]">
             Step 1: Choose a provider and date
-          </h2>
+          </p>
           <p className="text-sm text-[color:var(--muted)]">
             Select a provider to see the times patients can book on that day.
           </p>
           <form method="GET" className="space-y-4">
-            <div className="space-y-1">
-              <label className="text-sm font-semibold text-[color:var(--foreground)]">
-                Provider
-              </label>
+            <FormField label="Provider" required>
               <select
                 name="provider_id"
                 required
                 defaultValue={provider_id ?? ""}
-                className="w-full rounded-xl border border-[color:var(--border)] bg-transparent px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[color:var(--accent)]"
+                className={controlClassName()}
               >
                 <option value="" disabled>
                   Select a provider
@@ -94,37 +92,30 @@ export default async function NewAppointmentPage({
                   </option>
                 ))}
               </select>
-            </div>
+            </FormField>
 
-            <div className="space-y-1">
-              <label className="text-sm font-semibold text-[color:var(--foreground)]">
-                Visit date
-              </label>
+            <FormField label="Visit date" required>
               <input
                 name="date"
                 type="date"
                 required
                 min={today}
                 defaultValue={date ?? ""}
-                className="w-full rounded-xl border border-[color:var(--border)] bg-transparent px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[color:var(--accent)]"
+                className={controlClassName()}
               />
-            </div>
+            </FormField>
 
-            <button
-              type="submit"
-              className="w-full rounded-[1rem] border border-[color:var(--accent)] px-4 py-2.5 text-sm font-semibold text-[color:var(--accent)] transition hover:bg-[color:var(--accent)] hover:text-white"
-            >
+            <button type="submit" className={`${secondaryButtonClassName} w-full`}>
               Show available times
             </button>
           </form>
-        </div>
+        </Surface>
 
-        {/* Step 2 – slot picker + booking form (POST action) */}
         {provider_id && date && (
-          <div className="rounded-[1.5rem] border border-[color:var(--border)] bg-white p-6 space-y-4">
-            <h2 className="text-xs font-semibold uppercase tracking-[0.2em] text-[color:var(--muted)]">
+          <Surface className="space-y-5">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-[color:var(--muted)]">
               Step 2: Pick a time and confirm visit details
-            </h2>
+            </p>
             <p className="text-sm text-[color:var(--muted)]">
               Review the open times, then finish the appointment details below.
             </p>
@@ -137,14 +128,11 @@ export default async function NewAppointmentPage({
               <form action={bookAppointment} className="space-y-4">
                 <input type="hidden" name="provider_id" value={provider_id} />
                 {!isPatient && (
-                  <div className="space-y-1">
-                    <label className="text-sm font-semibold text-[color:var(--foreground)]">
-                      Patient record
-                    </label>
+                  <FormField label="Patient record" required>
                     <select
                       name="patient_id"
                       required
-                      className="w-full rounded-xl border border-[color:var(--border)] bg-transparent px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[color:var(--accent)]"
+                      className={controlClassName()}
                     >
                       <option value="" disabled defaultValue="">
                         Select a patient
@@ -153,12 +141,12 @@ export default async function NewAppointmentPage({
                         <option key={p.id} value={p.id}>
                           {p.full_name}
                         </option>
-                      ))}
+                        ))}
                     </select>
-                  </div>
+                  </FormField>
                 )}
 
-                <div className="space-y-2">
+                <div className="space-y-3">
                   <label className="text-sm font-semibold text-[color:var(--foreground)]">
                     Choose a time{" "}
                     <span className="font-normal text-[color:var(--muted)]">
@@ -168,45 +156,35 @@ export default async function NewAppointmentPage({
                   <SlotPicker slots={slots} />
                 </div>
 
-                <div className="space-y-1">
-                  <label className="text-sm font-semibold text-[color:var(--foreground)]">
-                    Visit type
-                  </label>
+                <FormField label="Visit type">
                   <select
                     name="visit_type"
                     defaultValue="virtual"
-                    className="w-full rounded-xl border border-[color:var(--border)] bg-transparent px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[color:var(--accent)]"
+                    className={controlClassName()}
                   >
                     <option value="virtual">Video visit</option>
                     <option value="in_person">In-person visit</option>
                   </select>
-                </div>
+                </FormField>
 
-                <div className="space-y-1">
-                  <label className="text-sm font-semibold text-[color:var(--foreground)]">
-                    Reason for visit{" "}
-                    <span className="font-normal text-[color:var(--muted)]">(optional)</span>
-                  </label>
-                  <p className="text-xs text-[color:var(--muted)]">
-                    Add a short note so the care team knows what this visit is for.
-                  </p>
+                <FormField
+                  label="Reason for visit"
+                  hint="Optional. Add a short note so the care team knows what this visit is for."
+                >
                   <input
                     name="reason"
                     type="text"
                     placeholder="For example: Follow-up, medication review, new symptoms"
-                    className="w-full rounded-xl border border-[color:var(--border)] bg-transparent px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[color:var(--accent)]"
+                    className={controlClassName()}
                   />
-                </div>
+                </FormField>
 
-                <button
-                  type="submit"
-                  className="w-full rounded-[1rem] bg-[color:var(--accent)] px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-[color:var(--accent-strong)]"
-                >
+                <button type="submit" className={`${primaryButtonClassName} w-full`}>
                   Book appointment
                 </button>
               </form>
             )}
-          </div>
+          </Surface>
         )}
       </div>
     </section>

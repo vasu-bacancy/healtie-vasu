@@ -8,18 +8,18 @@ export default function SlotPicker({ slots }: { slots: Slot[] }) {
   const [selected, setSelected] = useState<Slot | null>(null);
 
   return (
-    <div className="space-y-2">
-      <p className="text-xs text-[color:var(--muted)]">
+    <div className="space-y-3">
+      <p className="text-xs leading-5 text-[color:var(--muted)]">
         Choose the appointment start time that works best.
       </p>
-      <div className="grid grid-cols-2 gap-2">
+      <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
         {slots.map((slot) => (
           <label
             key={slot.start}
-            className={`flex cursor-pointer items-center gap-2 rounded-xl border px-3 py-2 text-sm transition ${
+            className={`motion-lift flex cursor-pointer items-center gap-3 rounded-[1rem] border px-4 py-3 text-sm transition ${
               selected?.start === slot.start
-                ? "border-[color:var(--accent)] bg-[color:var(--surface)]"
-                : "border-[color:var(--border)]"
+                ? "border-[color:var(--accent-soft-strong)] bg-[color:var(--surface-accent)] text-[color:var(--accent-ink)] shadow-[0_16px_30px_rgba(24,119,110,0.08)]"
+                : "border-[color:var(--border-strong)] bg-[color:var(--surface)] hover:bg-[color:var(--surface-subtle)]"
             }`}
           >
             <input
@@ -30,7 +30,7 @@ export default function SlotPicker({ slots }: { slots: Slot[] }) {
               className="accent-[color:var(--accent)]"
               onChange={() => setSelected(slot)}
             />
-            {slot.label}
+            <span className="font-medium">{slot.label}</span>
           </label>
         ))}
       </div>
@@ -41,7 +41,7 @@ export default function SlotPicker({ slots }: { slots: Slot[] }) {
         value={selected?.end ?? ""}
       />
       {selected && (
-        <p className="text-xs text-[color:var(--muted)]">
+        <p className="text-xs leading-5 text-[color:var(--accent-ink)]">
           Selected time: {selected.label}
         </p>
       )}

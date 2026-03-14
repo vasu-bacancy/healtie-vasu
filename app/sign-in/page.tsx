@@ -1,6 +1,8 @@
 import Link from "next/link";
 
 import LoginForm from "@/components/auth/LoginForm";
+import { Notice, inlineActionClassName } from "@/components/ui/app-kit";
+import { PublicShell } from "@/components/ui/public-shell";
 
 export default async function SignInPage({
   searchParams,
@@ -11,33 +13,46 @@ export default async function SignInPage({
   const showBanner = registered === "1";
 
   return (
-    <main className="app-shell min-h-screen">
-      <section className="grid-line mx-auto flex min-h-screen w-full max-w-xl flex-col items-center justify-center gap-6 px-6 py-8 sm:px-8 lg:px-12">
-        <div className="w-full rounded-[2rem] border border-[color:var(--border)] bg-[color:var(--surface)] px-8 py-10 shadow-[0_25px_70px_rgba(24,33,43,0.12)]">
-          <p className="text-xs font-semibold uppercase tracking-[0.3em] text-[color:var(--accent-strong)]">Sign in</p>
-          <h1 className="mt-4 text-3xl font-semibold text-[color:var(--foreground)]">Sign in to your clinic workspace</h1>
-          <p className="mt-2 text-sm text-[color:var(--muted)]">
-            Use the demo account below, or sign in with the patient or provider account your clinic created for you.
+    <PublicShell
+      eyebrow="Healtie access"
+      title="Sign in to your clinic workspace."
+      description="Use the demo account below, or sign in with the patient or provider account your clinic created for you."
+      aside={
+        <div className="space-y-3">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-[color:var(--accent-strong)]">
+            Demo account
           </p>
+          <p className="text-sm leading-6 text-[color:var(--accent-ink)]">
+            `admin@northstar.test` and `Demo1234!` open the seeded organization so you can walk admin, provider, and patient flows without database setup.
+          </p>
+        </div>
+      }
+    >
+      <div className="space-y-6">
+        <div className="space-y-2">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.3em] text-[color:var(--accent-strong)]">
+            Sign in
+          </p>
+          <h2 className="font-[family-name:var(--font-display)] text-3xl leading-none tracking-[-0.04em] text-[color:var(--foreground)]">
+            Pick up where the visit left off.
+          </h2>
+        </div>
           {showBanner && (
-            <div className="mt-4 rounded-[1.25rem] border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-800">
+            <Notice tone="success">
               Your account is ready. Sign in with the email and password you just created.
-            </div>
+            </Notice>
           )}
-          <div className="mt-6">
-            <LoginForm />
-          </div>
-          <p className="mt-6 text-center text-sm text-[color:var(--muted)]">
+        <LoginForm />
+        <p className="text-center text-sm text-[color:var(--muted)]">
             New patient?{" "}
             <Link
               href="/register/northstar-care"
-              className="font-semibold text-[color:var(--accent)] hover:underline"
+              className={inlineActionClassName}
             >
               Create a patient account
             </Link>
           </p>
-        </div>
-      </section>
-    </main>
+      </div>
+    </PublicShell>
   );
 }

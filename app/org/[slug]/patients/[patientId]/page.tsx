@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { redirect, notFound } from "next/navigation";
 import { format } from "date-fns";
 
@@ -11,6 +10,15 @@ import {
   getPatientClinicalNotes,
 } from "@/lib/db/patients";
 import { addAllergy, addMedication } from "../actions";
+import {
+  DataPill,
+  FormField,
+  KeyValueRow,
+  PageHeader,
+  Surface,
+  controlClassName,
+  primaryButtonClassName,
+} from "@/components/ui/app-kit";
 
 export default async function PatientChartPage({
   params,
@@ -42,185 +50,119 @@ export default async function PatientChartPage({
 
   return (
     <section className="space-y-6">
-      <header className="flex items-start justify-between border-b border-[color:var(--border)] pb-6">
-        <div className="space-y-1">
-          <Link
-            href={`/org/${slug}/patients`}
-            className="text-sm text-[color:var(--muted)] hover:text-[color:var(--foreground)]"
-          >
-            ← Patients
-          </Link>
-          <h1 className="text-3xl font-semibold tracking-tight text-[color:var(--foreground)]">
-            {patient.full_name}
-          </h1>
+      <PageHeader
+        backHref={`/org/${slug}/patients`}
+        backLabel="Patients"
+        title={patient.full_name}
+        description="Review demographics, allergies, medications, and signed notes without leaving the chart."
+        meta={
           <div className="flex items-center gap-2">
-            <span
-              className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-semibold ${
-                patient.status === "active"
-                  ? "bg-emerald-50 text-emerald-700"
-                  : "bg-zinc-100 text-zinc-500"
-              }`}
-            >
+            <DataPill tone={patient.status === "active" ? "success" : "neutral"}>
               {patient.status === "active" ? "Active" : patient.status}
-            </span>
-            <span
-              className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-semibold ${
-                patient.intake_completed
-                  ? "bg-emerald-50 text-emerald-700"
-                  : "bg-amber-50 text-amber-700"
-              }`}
-            >
+            </DataPill>
+            <DataPill tone={patient.intake_completed ? "success" : "warning"}>
               {patient.intake_completed ? "Intake complete" : "Needs intake"}
-            </span>
+            </DataPill>
           </div>
-        </div>
-      </header>
+        }
+      />
 
       <div className="grid gap-6 lg:grid-cols-2">
-        {/* Demographics */}
-        <div className="rounded-[1.5rem] border border-[color:var(--border)] bg-white p-6 space-y-4">
-          <h2 className="text-xs font-semibold uppercase tracking-[0.2em] text-[color:var(--muted)]">
+        <Surface className="space-y-4">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-[color:var(--muted)]">
             Demographics
-          </h2>
-          <dl className="space-y-3 text-sm">
-            <Row label="Date of birth">
-              {patient.dob
-                ? format(new Date(patient.dob + "T00:00:00"), "MMMM d, yyyy")
-                : "—"}
-            </Row>
-            <Row label="Sex">{patient.sex ?? "—"}</Row>
-            <Row label="Email">{patient.email ?? "—"}</Row>
-            <Row label="Phone">{patient.phone ?? "—"}</Row>
-            <Row label="Registered">
+          </p>
+          <dl>
+            <KeyValueRow label="Date of birth">
+              {patient.dob ? format(new Date(`${patient.dob}T00:00:00`), "MMMM d, yyyy") : "—"}
+            </KeyValueRow>
+            <KeyValueRow label="Sex">{patient.sex ?? "—"}</KeyValueRow>
+            <KeyValueRow label="Email">{patient.email ?? "—"}</KeyValueRow>
+            <KeyValueRow label="Phone">{patient.phone ?? "—"}</KeyValueRow>
+            <KeyValueRow label="Registered">
               {format(new Date(patient.created_at), "MMM d, yyyy")}
-            </Row>
+            </KeyValueRow>
           </dl>
-        </div>
+        </Surface>
 
-        {/* Allergies */}
-        <div className="rounded-[1.5rem] border border-[color:var(--border)] bg-white p-6 space-y-4">
-          <h2 className="text-xs font-semibold uppercase tracking-[0.2em] text-[color:var(--muted)]">
-            Allergies
-          </h2>
-
-          {allergies.length === 0 ? (
-            <p className="text-sm text-[color:var(--muted)]">
-              No allergies have been recorded for this patient yet.
-            </p>
-          ) : (
-            <ul className="space-y-2">
-              {allergies.map((a) => (
-                <li
-                  key={a.id}
-                  className="flex items-start justify-between rounded-xl border border-[color:var(--border)] px-4 py-3 text-sm"
-                >
-                  <div>
-                    <p className="font-semibold text-[color:var(--foreground)]">{a.substance}</p>
-                    {a.reaction && (
-                      <p className="text-[color:var(--muted)]">Reaction: {a.reaction}</p>
-                    )}
-                  </div>
-                </li>
-              ))}
-            </ul>
-          )}
-
-          {canManage && (
-            <form action={addAllergy} className="space-y-2 pt-2 border-t border-[color:var(--border)]">
+        <ChartListSection
+          title="Allergies"
+          emptyText="No allergies have been recorded for this patient yet."
+          items={allergies.map((allergy) => ({
+            id: allergy.id,
+            title: allergy.substance,
+            subtitle: allergy.reaction ? `Reaction: ${allergy.reaction}` : null,
+          }))}
+        >
+          {canManage ? (
+            <form action={addAllergy} className="space-y-3 border-t border-[color:var(--border)] pt-4">
               <input type="hidden" name="patient_id" value={patientId} />
-              <p className="text-xs font-semibold uppercase tracking-[0.15em] text-[color:var(--muted)]">
-                Add allergy
-              </p>
-              <input
-                name="substance"
-                type="text"
-                required
-                placeholder="Substance (e.g. Penicillin)"
-                className="w-full rounded-xl border border-[color:var(--border)] bg-transparent px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[color:var(--accent)]"
-              />
-              <input
-                name="reaction"
-                type="text"
-                placeholder="Reaction (optional)"
-                className="w-full rounded-xl border border-[color:var(--border)] bg-transparent px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[color:var(--accent)]"
-              />
-              <button
-                type="submit"
-                className="rounded-[0.75rem] bg-[color:var(--accent)] px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-[color:var(--accent-strong)]"
-              >
+              <FormField label="Substance" required>
+                <input
+                  name="substance"
+                  type="text"
+                  required
+                  placeholder="Substance (e.g. Penicillin)"
+                  className={controlClassName()}
+                />
+              </FormField>
+              <FormField label="Reaction" hint="Optional. Add a short reaction note.">
+                <input
+                  name="reaction"
+                  type="text"
+                  placeholder="Reaction (optional)"
+                  className={controlClassName()}
+                />
+              </FormField>
+              <button type="submit" className={primaryButtonClassName}>
                 Add allergy
               </button>
             </form>
-          )}
-        </div>
+          ) : null}
+        </ChartListSection>
 
-        {/* Medications */}
-        <div className="rounded-[1.5rem] border border-[color:var(--border)] bg-white p-6 space-y-4">
-          <h2 className="text-xs font-semibold uppercase tracking-[0.2em] text-[color:var(--muted)]">
-            Medications
-          </h2>
-
-          {medications.length === 0 ? (
-            <p className="text-sm text-[color:var(--muted)]">
-              No medications have been recorded for this patient yet.
-            </p>
-          ) : (
-            <ul className="space-y-2">
-              {medications.map((m) => (
-                <li
-                  key={m.id}
-                  className="flex items-start justify-between rounded-xl border border-[color:var(--border)] px-4 py-3 text-sm"
-                >
-                  <div>
-                    <p className="font-semibold text-[color:var(--foreground)]">
-                      {m.medication_name}
-                    </p>
-                    {m.dosage && (
-                      <p className="text-[color:var(--muted)]">{m.dosage}</p>
-                    )}
-                  </div>
-                </li>
-              ))}
-            </ul>
-          )}
-
-          {canManage && (
-            <form action={addMedication} className="space-y-2 pt-2 border-t border-[color:var(--border)]">
+        <ChartListSection
+          title="Medications"
+          emptyText="No medications have been recorded for this patient yet."
+          items={medications.map((medication) => ({
+            id: medication.id,
+            title: medication.medication_name,
+            subtitle: medication.dosage ?? null,
+          }))}
+        >
+          {canManage ? (
+            <form action={addMedication} className="space-y-3 border-t border-[color:var(--border)] pt-4">
               <input type="hidden" name="patient_id" value={patientId} />
-              <p className="text-xs font-semibold uppercase tracking-[0.15em] text-[color:var(--muted)]">
-                Add medication
-              </p>
-              <input
-                name="medication_name"
-                type="text"
-                required
-                placeholder="Medication name"
-                className="w-full rounded-xl border border-[color:var(--border)] bg-transparent px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[color:var(--accent)]"
-              />
-              <input
-                name="dosage"
-                type="text"
-                placeholder="Dosage (optional, e.g. 10mg daily)"
-                className="w-full rounded-xl border border-[color:var(--border)] bg-transparent px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[color:var(--accent)]"
-              />
-              <button
-                type="submit"
-                className="rounded-[0.75rem] bg-[color:var(--accent)] px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-[color:var(--accent-strong)]"
-              >
+              <FormField label="Medication name" required>
+                <input
+                  name="medication_name"
+                  type="text"
+                  required
+                  placeholder="Medication name"
+                  className={controlClassName()}
+                />
+              </FormField>
+              <FormField label="Dosage" hint="Optional. Example: 10mg daily.">
+                <input
+                  name="dosage"
+                  type="text"
+                  placeholder="Dosage (optional, e.g. 10mg daily)"
+                  className={controlClassName()}
+                />
+              </FormField>
+              <button type="submit" className={primaryButtonClassName}>
                 Add medication
               </button>
             </form>
-          )}
-        </div>
+          ) : null}
+        </ChartListSection>
 
-        {/* Clinical Notes */}
-        <div className="rounded-[1.5rem] border border-[color:var(--border)] bg-white p-6 space-y-4">
-          <h2 className="text-xs font-semibold uppercase tracking-[0.2em] text-[color:var(--muted)]">
+        <Surface className="space-y-4">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-[color:var(--muted)]">
             Clinical notes
-          </h2>
-
+          </p>
           {notes.length === 0 ? (
-            <p className="text-sm text-[color:var(--muted)]">
+            <p className="text-sm leading-6 text-[color:var(--muted)]">
               No signed visit notes are in this chart yet.
             </p>
           ) : (
@@ -228,62 +170,80 @@ export default async function PatientChartPage({
               {notes.map((note) => (
                 <li
                   key={note.id}
-                  className="rounded-xl border border-[color:var(--border)] px-4 py-3 text-sm space-y-2"
+                  className="space-y-3 rounded-[1rem] border border-[color:var(--border)] bg-[color:var(--surface-subtle)] px-4 py-4 text-sm"
                 >
-                  <div className="flex items-center justify-between">
+                  <div className="flex items-center justify-between gap-3">
                     <p className="text-xs font-semibold uppercase tracking-[0.15em] text-[color:var(--muted)]">
                       {note.note_type.toUpperCase()} note
                     </p>
                     <div className="flex items-center gap-2">
-                      {note.signed_at && (
-                        <span className="inline-flex rounded-full bg-emerald-50 px-2 py-0.5 text-xs font-semibold text-emerald-700">
-                          Signed
-                        </span>
-                      )}
+                      {note.signed_at ? <DataPill tone="success">Signed</DataPill> : null}
                       <p className="text-xs text-[color:var(--muted)]">
                         {format(new Date(note.created_at), "MMM d, yyyy")}
                       </p>
                     </div>
                   </div>
-                  {note.subjective && (
-                    <div>
-                      <p className="text-xs font-semibold text-[color:var(--muted)]">S</p>
-                      <p className="text-[color:var(--foreground)]">{note.subjective}</p>
-                    </div>
-                  )}
-                  {note.objective && (
-                    <div>
-                      <p className="text-xs font-semibold text-[color:var(--muted)]">O</p>
-                      <p className="text-[color:var(--foreground)]">{note.objective}</p>
-                    </div>
-                  )}
-                  {note.assessment && (
-                    <div>
-                      <p className="text-xs font-semibold text-[color:var(--muted)]">A</p>
-                      <p className="text-[color:var(--foreground)]">{note.assessment}</p>
-                    </div>
-                  )}
-                  {note.plan && (
-                    <div>
-                      <p className="text-xs font-semibold text-[color:var(--muted)]">P</p>
-                      <p className="text-[color:var(--foreground)]">{note.plan}</p>
-                    </div>
-                  )}
+                  <SoapBlock label="S" value={note.subjective} />
+                  <SoapBlock label="O" value={note.objective} />
+                  <SoapBlock label="A" value={note.assessment} />
+                  <SoapBlock label="P" value={note.plan} />
                 </li>
               ))}
             </ul>
           )}
-        </div>
+        </Surface>
       </div>
     </section>
   );
 }
 
-function Row({ label, children }: { label: string; children: React.ReactNode }) {
+function ChartListSection({
+  title,
+  emptyText,
+  items,
+  children,
+}: {
+  title: string;
+  emptyText: string;
+  items: Array<{ id: string; title: string; subtitle: string | null }>;
+  children?: React.ReactNode;
+}) {
   return (
-    <div className="flex gap-4">
-      <dt className="w-32 shrink-0 text-[color:var(--muted)]">{label}</dt>
-      <dd className="font-medium text-[color:var(--foreground)]">{children}</dd>
+    <Surface className="space-y-4">
+      <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-[color:var(--muted)]">
+        {title}
+      </p>
+      {items.length === 0 ? (
+        <p className="text-sm leading-6 text-[color:var(--muted)]">{emptyText}</p>
+      ) : (
+        <ul className="space-y-2">
+          {items.map((item) => (
+            <li
+              key={item.id}
+              className="rounded-[1rem] border border-[color:var(--border)] bg-[color:var(--surface-subtle)] px-4 py-3 text-sm"
+            >
+              <p className="font-semibold text-[color:var(--foreground)]">{item.title}</p>
+              {item.subtitle ? (
+                <p className="text-[color:var(--muted)]">{item.subtitle}</p>
+              ) : null}
+            </li>
+          ))}
+        </ul>
+      )}
+      {children}
+    </Surface>
+  );
+}
+
+function SoapBlock({ label, value }: { label: string; value: string | null }) {
+  if (!value) {
+    return null;
+  }
+
+  return (
+    <div>
+      <p className="text-xs font-semibold text-[color:var(--muted)]">{label}</p>
+      <p className="leading-6 text-[color:var(--foreground)]">{value}</p>
     </div>
   );
 }

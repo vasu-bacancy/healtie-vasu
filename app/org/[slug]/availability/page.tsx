@@ -8,6 +8,14 @@ import {
   DAY_NAMES,
 } from "@/lib/db/providers";
 import { addAvailability, deleteAvailability } from "./actions";
+import {
+  EmptyState,
+  FormField,
+  PageHeader,
+  Surface,
+  controlClassName,
+  primaryButtonClassName,
+} from "@/components/ui/app-kit";
 
 export default async function AvailabilityPage({
   params,
@@ -39,16 +47,14 @@ export default async function AvailabilityPage({
   if (!provider) {
     return (
       <section className="space-y-6">
-        <header className="border-b border-[color:var(--border)] pb-6">
-          <h1 className="text-3xl font-semibold tracking-tight text-[color:var(--foreground)]">
-            Availability
-          </h1>
-        </header>
-        <div className="rounded-[1.5rem] border border-[color:var(--border)] bg-white p-10 text-center">
-          <p className="text-sm text-[color:var(--muted)]">
-            This account is not linked to a provider profile yet. Ask a clinic admin to finish setup.
-          </p>
-        </div>
+        <PageHeader
+          title="Availability"
+          description="This account still needs a provider profile before weekly booking windows can be managed."
+        />
+        <EmptyState
+          title="This account is not linked to a provider profile yet."
+          description="Ask a clinic admin to finish setup before managing booking windows."
+        />
       </section>
     );
   }
@@ -68,23 +74,16 @@ export default async function AvailabilityPage({
 
   return (
     <section className="space-y-6">
-      <header className="border-b border-[color:var(--border)] pb-6">
-        <p className="text-sm font-semibold text-[color:var(--muted)]">
-          {membership.organization.name}
-        </p>
-        <h1 className="mt-1 text-3xl font-semibold tracking-tight text-[color:var(--foreground)]">
-          My availability
-        </h1>
-        <p className="mt-1 text-sm text-[color:var(--muted)]">
-          Set the weekly hours when patients can book time with you.
-        </p>
-      </header>
+      <PageHeader
+        eyebrow={membership.organization.name}
+        title="My availability"
+        description="Set the weekly hours when patients can book time with you."
+      />
 
-      {/* Current schedule */}
-      <div className="rounded-[1.5rem] border border-[color:var(--border)] bg-white p-6 space-y-4">
-        <h2 className="text-xs font-semibold uppercase tracking-[0.2em] text-[color:var(--muted)]">
+      <Surface className="space-y-5">
+        <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-[color:var(--muted)]">
           Weekly schedule
-        </h2>
+        </p>
 
         {availability.length === 0 ? (
           <p className="text-sm text-[color:var(--muted)]">
@@ -104,7 +103,7 @@ export default async function AvailabilityPage({
                     {windows.map((w) => (
                       <div
                         key={w.id}
-                        className="flex items-center gap-2 rounded-xl border border-[color:var(--border)] bg-[color:var(--surface)] px-3 py-1.5 text-sm"
+                        className="flex items-center gap-2 rounded-[1rem] border border-[color:var(--border)] bg-[color:var(--surface-subtle)] px-3 py-2 text-sm"
                       >
                         <span className="text-[color:var(--foreground)]">
                           {w.start_time.slice(0, 5)} – {w.end_time.slice(0, 5)}
@@ -116,7 +115,7 @@ export default async function AvailabilityPage({
                           <input type="hidden" name="id" value={w.id} />
                           <button
                             type="submit"
-                            className="text-xs text-[color:#c13b3b] hover:underline"
+                            className="text-xs font-semibold text-[color:var(--danger)] transition hover:opacity-80"
                           >
                             Remove window
                           </button>
@@ -129,20 +128,18 @@ export default async function AvailabilityPage({
             })}
           </div>
         )}
-      </div>
+      </Surface>
 
-      {/* Add availability form */}
-      <div className="rounded-[1.5rem] border border-[color:var(--border)] bg-white p-6 space-y-4">
-        <h2 className="text-xs font-semibold uppercase tracking-[0.2em] text-[color:var(--muted)]">
+      <Surface className="space-y-5">
+        <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-[color:var(--muted)]">
           Add availability window
-        </h2>
+        </p>
         <form action={addAvailability} className="grid grid-cols-2 gap-4 sm:grid-cols-4">
-          <div className="space-y-1">
-            <label className="text-xs font-semibold text-[color:var(--muted)]">Day</label>
+          <FormField label="Day">
             <select
               name="day_of_week"
               required
-              className="w-full rounded-xl border border-[color:var(--border)] bg-transparent px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[color:var(--accent)]"
+              className={controlClassName()}
             >
               {[1, 2, 3, 4, 5, 6, 0].map((d) => (
                 <option key={d} value={d}>
@@ -150,54 +147,48 @@ export default async function AvailabilityPage({
                 </option>
               ))}
             </select>
-          </div>
+          </FormField>
 
-          <div className="space-y-1">
-            <label className="text-xs font-semibold text-[color:var(--muted)]">Start time</label>
+          <FormField label="Start time">
             <input
               name="start_time"
               type="time"
               required
               defaultValue="09:00"
-              className="w-full rounded-xl border border-[color:var(--border)] bg-transparent px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[color:var(--accent)]"
+              className={controlClassName()}
             />
-          </div>
+          </FormField>
 
-          <div className="space-y-1">
-            <label className="text-xs font-semibold text-[color:var(--muted)]">End time</label>
+          <FormField label="End time">
             <input
               name="end_time"
               type="time"
               required
               defaultValue="17:00"
-              className="w-full rounded-xl border border-[color:var(--border)] bg-transparent px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[color:var(--accent)]"
+              className={controlClassName()}
             />
-          </div>
+          </FormField>
 
-          <div className="space-y-1">
-            <label className="text-xs font-semibold text-[color:var(--muted)]">Visit length</label>
+          <FormField label="Visit length">
             <select
               name="slot_minutes"
               defaultValue="30"
-              className="w-full rounded-xl border border-[color:var(--border)] bg-transparent px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[color:var(--accent)]"
+              className={controlClassName()}
             >
               <option value="15">15 minutes</option>
               <option value="30">30 minutes</option>
               <option value="45">45 minutes</option>
               <option value="60">60 minutes</option>
             </select>
-          </div>
+          </FormField>
 
           <div className="col-span-2 sm:col-span-4 flex justify-end">
-            <button
-              type="submit"
-              className="rounded-[1rem] bg-[color:var(--accent)] px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-[color:var(--accent-strong)]"
-            >
+            <button type="submit" className={primaryButtonClassName}>
               Add booking window
             </button>
           </div>
         </form>
-      </div>
+      </Surface>
     </section>
   );
 }

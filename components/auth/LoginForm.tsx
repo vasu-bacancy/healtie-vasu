@@ -4,6 +4,12 @@ import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 
 import { createClient } from "@/lib/supabase/client";
+import {
+  FormField,
+  Notice,
+  controlClassName,
+  primaryButtonClassName,
+} from "@/components/ui/app-kit";
 
 export default function LoginForm() {
   const supabase = createClient();
@@ -39,11 +45,11 @@ export default function LoginForm() {
   }
 
   return (
-    <form className="flex flex-col gap-4" onSubmit={handleSubmit}>
-      <div className="rounded-[1.25rem] border border-[color:var(--border)] bg-[color:var(--surface)] p-4">
-        <label className="text-sm font-semibold text-[color:var(--muted)]" htmlFor="email">
-          Email address
-        </label>
+    <form className="flex flex-col gap-5" onSubmit={handleSubmit}>
+      <FormField
+        label="Email address"
+        hint="Use the email linked to your clinic or patient account."
+      >
         <input
           id="email"
           name="email"
@@ -51,18 +57,15 @@ export default function LoginForm() {
           value={email}
           onChange={(event) => setEmail(event.target.value)}
           required
-          className="mt-2 w-full rounded-xl border border-[color:var(--border)] bg-transparent px-3 py-2 text-sm"
+          className={controlClassName()}
           placeholder="name@clinic.com"
         />
-        <p className="mt-2 text-xs text-[color:var(--muted)]">
-          Use the email linked to your clinic or patient account.
-        </p>
-      </div>
+      </FormField>
 
-      <div className="rounded-[1.25rem] border border-[color:var(--border)] bg-[color:var(--surface)] p-4">
-        <label className="text-sm font-semibold text-[color:var(--muted)]" htmlFor="password">
-          Password
-        </label>
+      <FormField
+        label="Password"
+        hint="Demo credentials are prefilled. Replace them if you created your own account."
+      >
         <input
           id="password"
           name="password"
@@ -70,26 +73,21 @@ export default function LoginForm() {
           value={password}
           onChange={(event) => setPassword(event.target.value)}
           required
-          className="mt-2 w-full rounded-xl border border-[color:var(--border)] bg-transparent px-3 py-2 text-sm"
+          className={controlClassName()}
           placeholder="••••••••"
         />
-        <p className="mt-2 text-xs text-[color:var(--muted)]">
-          Demo credentials are prefilled. Replace them if you created your own account.
-        </p>
-      </div>
+      </FormField>
 
       <button
         type="submit"
-        className="rounded-[1.25rem] bg-[color:var(--accent)] px-4 py-3 text-sm font-semibold text-white transition hover:bg-[color:var(--accent-strong)] disabled:cursor-not-allowed disabled:opacity-60"
+        className={primaryButtonClassName}
         disabled={isPending}
       >
         {isPending ? "Signing you in…" : "Sign in"}
       </button>
 
       {error && (
-        <p className="rounded-xl bg-[color:#fef2f2] px-4 py-3 text-sm text-[color:#c13b3b]">
-          {error}
-        </p>
+        <Notice tone="warning">{error}</Notice>
       )}
     </form>
   );
