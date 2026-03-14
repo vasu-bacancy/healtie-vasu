@@ -32,27 +32,27 @@ If a task does not directly improve the end-to-end flow of `org admin -> provide
 - [x] Store consent acceptance and intake completion state.
 
 ### 5. Provider Scheduling
-- [ ] Build provider profile page.
-- [ ] Build weekly availability editor.
-- [ ] Convert availability into bookable appointment slots.
-- [ ] Prevent double booking.
+- [x] Build provider profile page.
+- [x] Build weekly availability editor.
+- [x] Convert availability into bookable appointment slots.
+- [x] Prevent double booking.
 
 ### 6. Appointment Flow
-- [ ] Build appointment booking UI for patients.
-- [ ] Build appointment list and detail page.
-- [ ] Support appointment statuses: `scheduled`, `checked_in`, `in_progress`, `completed`, `cancelled`.
-- [ ] Generate meeting URL or store external meeting link.
+- [x] Build appointment booking UI for patients.
+- [x] Build appointment list and detail page.
+- [x] Support appointment statuses: `scheduled`, `checked_in`, `in_progress`, `completed`, `cancelled`.
+- [x] Generate meeting URL or store external meeting link.
 
 ### 7. Virtual Visit
-- [ ] Build appointment room page with patient and provider context.
-- [ ] Show appointment metadata, join button, status controls, and notes shortcut.
-- [ ] Add safe fallback for video using hosted meeting link if native integration is unavailable.
+- [x] Build appointment room page with patient and provider context.
+- [x] Show appointment metadata, join button, status controls, and notes shortcut.
+- [x] Add safe fallback for video using hosted meeting link if native integration is unavailable.
 
 ### 8. Clinical Documentation
-- [ ] Create encounter record when visit starts.
-- [ ] Build SOAP note form.
-- [ ] Save and display signed note in patient chart.
-- [ ] Add audit log events for note creation and appointment status changes.
+- [x] Create encounter record when visit starts.
+- [x] Build SOAP note form.
+- [x] Save and display signed note in patient chart.
+- [x] Add audit log events for note creation and appointment status changes.
 
 ### 9. Dashboards
 - [ ] Provider dashboard with today's schedule and pending notes.

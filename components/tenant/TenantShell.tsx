@@ -13,13 +13,16 @@ const navConfig: Record<string, { label: string; href: string }[]> = {
     { label: "Dashboard", href: "" },
     { label: "Patients", href: "patients" },
     { label: "Providers", href: "providers" },
+    { label: "Appointments", href: "appointments" },
   ],
   provider: [
     { label: "Today", href: "" },
+    { label: "Appointments", href: "appointments" },
     { label: "Availability", href: "availability" },
   ],
   patient: [
     { label: "Upcoming visits", href: "" },
+    { label: "Appointments", href: "appointments" },
     { label: "Chart", href: "chart" },
   ],
 };

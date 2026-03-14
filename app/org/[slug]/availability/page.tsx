@@ -1,0 +1,203 @@
+import { redirect } from "next/navigation";
+
+import { createClient } from "@/lib/supabase/server";
+import { ensureProfileForUser, getActiveMembershipWithOrg } from "@/lib/supabase/tenant";
+import {
+  getProviderByProfileId,
+  getProviderAvailability,
+  DAY_NAMES,
+} from "@/lib/db/providers";
+import { addAvailability, deleteAvailability } from "./actions";
+
+export default async function AvailabilityPage({
+  params,
+}: {
+  params: Promise<{ slug: string }>;
+}) {
+  const { slug } = await params;
+  const supabase = await createClient();
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) redirect("/sign-in");
+
+  const profile = await ensureProfileForUser(supabase, user);
+  const membership = await getActiveMembershipWithOrg(supabase, profile.id);
+  if (!membership) redirect("/sign-in");
+
+  if (membership.role !== "provider" && membership.role !== "org_admin") {
+    redirect(`/org/${slug}`);
+  }
+
+  const provider = await getProviderByProfileId(
+    supabase,
+    profile.id,
+    membership.organization_id,
+  );
+
+  if (!provider) {
+    return (
+      <section className="space-y-6">
+        <header className="border-b border-[color:var(--border)] pb-6">
+          <h1 className="text-3xl font-semibold tracking-tight text-[color:var(--foreground)]">
+            Availability
+          </h1>
+        </header>
+        <div className="rounded-[1.5rem] border border-[color:var(--border)] bg-white p-10 text-center">
+          <p className="text-sm text-[color:var(--muted)]">
+            No provider record found for your account. Contact an administrator.
+          </p>
+        </div>
+      </section>
+    );
+  }
+
+  const availability = await getProviderAvailability(
+    supabase,
+    provider.id,
+    membership.organization_id,
+  );
+
+  // Group by day for display
+  const byDay: Record<number, typeof availability> = {};
+  for (const a of availability) {
+    if (!byDay[a.day_of_week]) byDay[a.day_of_week] = [];
+    byDay[a.day_of_week].push(a);
+  }
+
+  return (
+    <section className="space-y-6">
+      <header className="border-b border-[color:var(--border)] pb-6">
+        <p className="text-sm font-semibold text-[color:var(--muted)]">
+          {membership.organization.name}
+        </p>
+        <h1 className="mt-1 text-3xl font-semibold tracking-tight text-[color:var(--foreground)]">
+          My availability
+        </h1>
+        <p className="mt-1 text-sm text-[color:var(--muted)]">
+          Manage the weekly windows when patients can book appointments with you.
+        </p>
+      </header>
+
+      {/* Current schedule */}
+      <div className="rounded-[1.5rem] border border-[color:var(--border)] bg-white p-6 space-y-4">
+        <h2 className="text-xs font-semibold uppercase tracking-[0.2em] text-[color:var(--muted)]">
+          Weekly schedule
+        </h2>
+
+        {availability.length === 0 ? (
+          <p className="text-sm text-[color:var(--muted)]">
+            No availability set. Add windows below.
+          </p>
+        ) : (
+          <div className="space-y-2">
+            {[1, 2, 3, 4, 5, 6, 0].map((day) => {
+              const windows = byDay[day];
+              if (!windows?.length) return null;
+              return (
+                <div key={day} className="flex items-start gap-4">
+                  <span className="w-28 shrink-0 text-sm font-semibold text-[color:var(--foreground)]">
+                    {DAY_NAMES[day]}
+                  </span>
+                  <div className="flex flex-wrap gap-2">
+                    {windows.map((w) => (
+                      <div
+                        key={w.id}
+                        className="flex items-center gap-2 rounded-xl border border-[color:var(--border)] bg-[color:var(--surface)] px-3 py-1.5 text-sm"
+                      >
+                        <span className="text-[color:var(--foreground)]">
+                          {w.start_time.slice(0, 5)} – {w.end_time.slice(0, 5)}
+                        </span>
+                        <span className="text-xs text-[color:var(--muted)]">
+                          {w.slot_minutes}min slots
+                        </span>
+                        <form action={deleteAvailability}>
+                          <input type="hidden" name="id" value={w.id} />
+                          <button
+                            type="submit"
+                            className="text-xs text-[color:#c13b3b] hover:underline"
+                          >
+                            Remove
+                          </button>
+                        </form>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
+
+      {/* Add availability form */}
+      <div className="rounded-[1.5rem] border border-[color:var(--border)] bg-white p-6 space-y-4">
+        <h2 className="text-xs font-semibold uppercase tracking-[0.2em] text-[color:var(--muted)]">
+          Add availability window
+        </h2>
+        <form action={addAvailability} className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+          <div className="space-y-1">
+            <label className="text-xs font-semibold text-[color:var(--muted)]">Day</label>
+            <select
+              name="day_of_week"
+              required
+              className="w-full rounded-xl border border-[color:var(--border)] bg-transparent px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[color:var(--accent)]"
+            >
+              {[1, 2, 3, 4, 5, 6, 0].map((d) => (
+                <option key={d} value={d}>
+                  {DAY_NAMES[d]}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div className="space-y-1">
+            <label className="text-xs font-semibold text-[color:var(--muted)]">Start time</label>
+            <input
+              name="start_time"
+              type="time"
+              required
+              defaultValue="09:00"
+              className="w-full rounded-xl border border-[color:var(--border)] bg-transparent px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[color:var(--accent)]"
+            />
+          </div>
+
+          <div className="space-y-1">
+            <label className="text-xs font-semibold text-[color:var(--muted)]">End time</label>
+            <input
+              name="end_time"
+              type="time"
+              required
+              defaultValue="17:00"
+              className="w-full rounded-xl border border-[color:var(--border)] bg-transparent px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[color:var(--accent)]"
+            />
+          </div>
+
+          <div className="space-y-1">
+            <label className="text-xs font-semibold text-[color:var(--muted)]">Slot (min)</label>
+            <select
+              name="slot_minutes"
+              defaultValue="30"
+              className="w-full rounded-xl border border-[color:var(--border)] bg-transparent px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[color:var(--accent)]"
+            >
+              <option value="15">15 min</option>
+              <option value="30">30 min</option>
+              <option value="45">45 min</option>
+              <option value="60">60 min</option>
+            </select>
+          </div>
+
+          <div className="col-span-2 sm:col-span-4 flex justify-end">
+            <button
+              type="submit"
+              className="rounded-[1rem] bg-[color:var(--accent)] px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-[color:var(--accent-strong)]"
+            >
+              Add window
+            </button>
+          </div>
+        </form>
+      </div>
+    </section>
+  );
+}
