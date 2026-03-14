@@ -18,7 +18,7 @@ export async function getEncounterByAppointmentId(
     .maybeSingle();
 
   if (error) throw error;
-  return data;
+  return data as EncounterRow | null;
 }
 
 export async function getClinicalNoteByEncounterId(
@@ -34,5 +34,5 @@ export async function getClinicalNoteByEncounterId(
     .maybeSingle();
 
   if (error) throw error;
-  return data;
+  return data as ClinicalNoteRow | null;
 }

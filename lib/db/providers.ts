@@ -61,7 +61,7 @@ export async function getProviderByProfileId(
     .maybeSingle();
 
   if (error) throw error;
-  return data;
+  return data as ProviderRow | null;
 }
 
 export async function getProviderAvailability(
@@ -78,7 +78,7 @@ export async function getProviderAvailability(
     .order("start_time", { ascending: true });
 
   if (error) throw error;
-  return data ?? [];
+  return (data ?? []) as ProviderAvailabilityRow[];
 }
 
 export async function getProviderAppointmentsForDate(
@@ -100,7 +100,7 @@ export async function getProviderAppointmentsForDate(
     .neq("status", "cancelled");
 
   if (error) throw error;
-  return data ?? [];
+  return (data ?? []) as AppointmentRow[];
 }
 
 /** Generate bookable slots for a given date, excluding already-booked times. */

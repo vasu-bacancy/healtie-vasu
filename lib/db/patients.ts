@@ -25,7 +25,7 @@ export async function getPatient(
   supabase: SupabaseClient<Database>,
   patientId: string,
   organizationId: string,
-) {
+): Promise<PatientRow> {
   const { data, error } = await supabase
     .from("patients")
     .select("*")
@@ -34,14 +34,14 @@ export async function getPatient(
     .single();
 
   if (error) throw error;
-  return data;
+  return data as PatientRow;
 }
 
 export async function getPatientAllergies(
   supabase: SupabaseClient<Database>,
   patientId: string,
   organizationId: string,
-) {
+): Promise<PatientAllergyRow[]> {
   const { data, error } = await supabase
     .from("patient_allergies")
     .select("*")
@@ -50,14 +50,14 @@ export async function getPatientAllergies(
     .order("created_at", { ascending: true });
 
   if (error) throw error;
-  return data ?? [];
+  return (data ?? []) as PatientAllergyRow[];
 }
 
 export async function getPatientMedications(
   supabase: SupabaseClient<Database>,
   patientId: string,
   organizationId: string,
-) {
+): Promise<PatientMedicationRow[]> {
   const { data, error } = await supabase
     .from("patient_medications")
     .select("*")
@@ -66,14 +66,14 @@ export async function getPatientMedications(
     .order("created_at", { ascending: true });
 
   if (error) throw error;
-  return data ?? [];
+  return (data ?? []) as PatientMedicationRow[];
 }
 
 export async function getPatientClinicalNotes(
   supabase: SupabaseClient<Database>,
   patientId: string,
   organizationId: string,
-) {
+): Promise<ClinicalNoteRow[]> {
   const { data, error } = await supabase
     .from("clinical_notes")
     .select("*")
@@ -82,5 +82,5 @@ export async function getPatientClinicalNotes(
     .order("created_at", { ascending: false });
 
   if (error) throw error;
-  return data ?? [];
+  return (data ?? []) as ClinicalNoteRow[];
 }

@@ -79,7 +79,7 @@ export async function getPatientByProfileId(
     .maybeSingle();
 
   if (error) throw error;
-  return data;
+  return data as PatientRow | null;
 }
 
 export const STATUS_LABEL: Record<string, string> = {
