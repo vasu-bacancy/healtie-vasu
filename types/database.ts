@@ -10,6 +10,7 @@ type BaseTable<Row, Insert, Update> = {
   Row: Row;
   Insert: Insert;
   Update: Update;
+  Relationships: [];
 };
 
 export type Database = {

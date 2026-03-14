@@ -19,17 +19,17 @@ If a task does not directly improve the end-to-end flow of `org admin -> provide
 - [x] Generate TypeScript database types if time allows.
 
 ### 3. Auth and Tenant Context
-- [ ] Add Supabase auth flow.
-- [ ] Create profile bootstrap on first login.
-- [ ] Resolve active organization from membership.
-- [ ] Protect private routes.
-- [ ] Add role-aware navigation for org admin, provider, patient.
+- [x] Add Supabase auth flow.
+- [x] Create profile bootstrap on first login.
+- [x] Resolve active organization from membership.
+- [x] Protect private routes.
+- [x] Add role-aware navigation for org admin, provider, patient.
 
 ### 4. Patient Management
-- [ ] Build patient registration / intake form.
-- [ ] Build patient list page for provider/admin.
-- [ ] Build patient chart page with demographics, allergies, medications, notes.
-- [ ] Store consent acceptance and intake completion state.
+- [x] Build patient registration / intake form.
+- [x] Build patient list page for provider/admin.
+- [x] Build patient chart page with demographics, allergies, medications, notes.
+- [x] Store consent acceptance and intake completion state.
 
 ### 5. Provider Scheduling
 - [ ] Build provider profile page.
