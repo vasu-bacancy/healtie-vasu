@@ -1,6 +1,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 import type { Database } from "@/types/database";
+import { createAdminClient } from "@/lib/supabase/admin";
 
 export type AppointmentRow = Database["public"]["Tables"]["appointments"]["Row"];
 export type PatientRow = Database["public"]["Tables"]["patients"]["Row"];
@@ -17,10 +18,11 @@ const APPOINTMENT_SELECT = `
 `;
 
 export async function getAppointments(
-  supabase: SupabaseClient<Database>,
+  _supabase: SupabaseClient<Database>,
   organizationId: string,
 ): Promise<AppointmentWithDetails[]> {
-  const { data, error } = await supabase
+  const admin = createAdminClient();
+  const { data, error } = await admin
     .from("appointments")
     .select(APPOINTMENT_SELECT)
     .eq("organization_id", organizationId)
@@ -31,11 +33,12 @@ export async function getAppointments(
 }
 
 export async function getPatientAppointments(
-  supabase: SupabaseClient<Database>,
+  _supabase: SupabaseClient<Database>,
   patientId: string,
   organizationId: string,
 ): Promise<AppointmentWithDetails[]> {
-  const { data, error } = await supabase
+  const admin = createAdminClient();
+  const { data, error } = await admin
     .from("appointments")
     .select(APPOINTMENT_SELECT)
     .eq("patient_id", patientId)
@@ -47,11 +50,12 @@ export async function getPatientAppointments(
 }
 
 export async function getAppointment(
-  supabase: SupabaseClient<Database>,
+  _supabase: SupabaseClient<Database>,
   id: string,
   organizationId: string,
 ): Promise<AppointmentWithDetails> {
-  const { data, error } = await supabase
+  const admin = createAdminClient();
+  const { data, error } = await admin
     .from("appointments")
     .select(APPOINTMENT_SELECT)
     .eq("id", id)

@@ -1,6 +1,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 import type { Database } from "@/types/database";
+import { createAdminClient } from "@/lib/supabase/admin";
 
 export type ProviderRow = Database["public"]["Tables"]["providers"]["Row"];
 export type ProviderAvailabilityRow =
@@ -14,10 +15,13 @@ export type ProviderWithProfile = ProviderRow & {
 export const DAY_NAMES = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 
 export async function getProviders(
-  supabase: SupabaseClient<Database>,
+  _supabase: SupabaseClient<Database>,
   organizationId: string,
 ): Promise<ProviderWithProfile[]> {
-  const { data, error } = await supabase
+  // Admin client bypasses RLS so the profile join is never silently nulled out.
+  // Org isolation is enforced by the explicit organization_id filter below.
+  const admin = createAdminClient();
+  const { data, error } = await admin
     .from("providers")
     .select("*, profile:profiles(id, full_name, email)")
     .eq("organization_id", organizationId)
@@ -28,11 +32,12 @@ export async function getProviders(
 }
 
 export async function getProvider(
-  supabase: SupabaseClient<Database>,
+  _supabase: SupabaseClient<Database>,
   providerId: string,
   organizationId: string,
 ): Promise<ProviderWithProfile> {
-  const { data, error } = await supabase
+  const admin = createAdminClient();
+  const { data, error } = await admin
     .from("providers")
     .select("*, profile:profiles(id, full_name, email)")
     .eq("id", providerId)
