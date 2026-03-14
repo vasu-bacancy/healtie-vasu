@@ -6,7 +6,6 @@ import { createClient } from "@/lib/supabase/server";
 import { ensureProfileForUser, getActiveMembershipWithOrg } from "@/lib/supabase/tenant";
 import { getPatients } from "@/lib/db/patients";
 import { getProviders, getProviderAvailability, getProviderAppointmentsForDate, generateBookableSlots } from "@/lib/db/providers";
-import { getPatientByProfileId } from "@/lib/db/appointments";
 import { bookAppointment } from "../actions";
 
 export default async function NewAppointmentPage({
@@ -37,14 +36,9 @@ export default async function NewAppointmentPage({
     isPatient ? Promise.resolve([]) : getPatients(supabase, orgId),
   ]);
 
-  // Self-patient: resolve their patient record
-  const selfPatient = isPatient
-    ? await getPatientByProfileId(supabase, profile.id, orgId)
-    : null;
-
   // Compute slots when provider + date are selected
   let slots: { start: string; end: string; label: string }[] = [];
-  let selectedProvider = providers.find((p) => p.id === provider_id) ?? null;
+  const selectedProvider = providers.find((p) => p.id === provider_id) ?? null;
 
   if (provider_id && date) {
     const [availability, booked] = await Promise.all([
@@ -66,7 +60,7 @@ export default async function NewAppointmentPage({
           ← Appointments
         </Link>
         <h1 className="text-3xl font-semibold tracking-tight text-[color:var(--foreground)]">
-          Book appointment
+          Schedule an appointment
         </h1>
       </header>
 
@@ -74,8 +68,11 @@ export default async function NewAppointmentPage({
         {/* Step 1 – provider + date selector (GET form) */}
         <div className="rounded-[1.5rem] border border-[color:var(--border)] bg-white p-6 space-y-4">
           <h2 className="text-xs font-semibold uppercase tracking-[0.2em] text-[color:var(--muted)]">
-            Step 1 — Choose provider & date
+            Step 1: Choose a provider and date
           </h2>
+          <p className="text-sm text-[color:var(--muted)]">
+            Select a provider to see the times patients can book on that day.
+          </p>
           <form method="GET" className="space-y-4">
             <div className="space-y-1">
               <label className="text-sm font-semibold text-[color:var(--foreground)]">
@@ -88,7 +85,7 @@ export default async function NewAppointmentPage({
                 className="w-full rounded-xl border border-[color:var(--border)] bg-transparent px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[color:var(--accent)]"
               >
                 <option value="" disabled>
-                  — Select a provider —
+                  Select a provider
                 </option>
                 {providers.map((p) => (
                   <option key={p.id} value={p.id}>
@@ -101,7 +98,7 @@ export default async function NewAppointmentPage({
 
             <div className="space-y-1">
               <label className="text-sm font-semibold text-[color:var(--foreground)]">
-                Date
+                Visit date
               </label>
               <input
                 name="date"
@@ -117,7 +114,7 @@ export default async function NewAppointmentPage({
               type="submit"
               className="w-full rounded-[1rem] border border-[color:var(--accent)] px-4 py-2.5 text-sm font-semibold text-[color:var(--accent)] transition hover:bg-[color:var(--accent)] hover:text-white"
             >
-              Find available slots
+              Show available times
             </button>
           </form>
         </div>
@@ -126,12 +123,15 @@ export default async function NewAppointmentPage({
         {provider_id && date && (
           <div className="rounded-[1.5rem] border border-[color:var(--border)] bg-white p-6 space-y-4">
             <h2 className="text-xs font-semibold uppercase tracking-[0.2em] text-[color:var(--muted)]">
-              Step 2 — Select a slot & confirm
+              Step 2: Pick a time and confirm visit details
             </h2>
+            <p className="text-sm text-[color:var(--muted)]">
+              Review the open times, then finish the appointment details below.
+            </p>
 
             {slots.length === 0 ? (
               <p className="text-sm text-[color:var(--muted)]">
-                No available slots on this date. Try a different date or provider.
+                No times are open on this date. Try another day or choose a different provider.
               </p>
             ) : (
               <form action={bookAppointment} className="space-y-4">
@@ -139,7 +139,7 @@ export default async function NewAppointmentPage({
                 {!isPatient && (
                   <div className="space-y-1">
                     <label className="text-sm font-semibold text-[color:var(--foreground)]">
-                      Patient
+                      Patient record
                     </label>
                     <select
                       name="patient_id"
@@ -147,7 +147,7 @@ export default async function NewAppointmentPage({
                       className="w-full rounded-xl border border-[color:var(--border)] bg-transparent px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[color:var(--accent)]"
                     >
                       <option value="" disabled defaultValue="">
-                        — Select a patient —
+                        Select a patient
                       </option>
                       {patients.map((p) => (
                         <option key={p.id} value={p.id}>
@@ -160,7 +160,7 @@ export default async function NewAppointmentPage({
 
                 <div className="space-y-2">
                   <label className="text-sm font-semibold text-[color:var(--foreground)]">
-                    Available slots{" "}
+                    Choose a time{" "}
                     <span className="font-normal text-[color:var(--muted)]">
                       ({selectedProvider?.profile?.full_name ?? ""}, {date})
                     </span>
@@ -177,8 +177,8 @@ export default async function NewAppointmentPage({
                     defaultValue="virtual"
                     className="w-full rounded-xl border border-[color:var(--border)] bg-transparent px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[color:var(--accent)]"
                   >
-                    <option value="virtual">Virtual</option>
-                    <option value="in_person">In person</option>
+                    <option value="virtual">Video visit</option>
+                    <option value="in_person">In-person visit</option>
                   </select>
                 </div>
 
@@ -187,10 +187,13 @@ export default async function NewAppointmentPage({
                     Reason for visit{" "}
                     <span className="font-normal text-[color:var(--muted)]">(optional)</span>
                   </label>
+                  <p className="text-xs text-[color:var(--muted)]">
+                    Add a short note so the care team knows what this visit is for.
+                  </p>
                   <input
                     name="reason"
                     type="text"
-                    placeholder="e.g. Annual check-up"
+                    placeholder="For example: Follow-up, medication review, new symptoms"
                     className="w-full rounded-xl border border-[color:var(--border)] bg-transparent px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[color:var(--accent)]"
                   />
                 </div>
@@ -199,7 +202,7 @@ export default async function NewAppointmentPage({
                   type="submit"
                   className="w-full rounded-[1rem] bg-[color:var(--accent)] px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-[color:var(--accent-strong)]"
                 >
-                  Confirm booking
+                  Book appointment
                 </button>
               </form>
             )}

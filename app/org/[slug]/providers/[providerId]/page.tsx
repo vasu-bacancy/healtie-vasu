@@ -61,12 +61,12 @@ export default async function ProviderProfilePage({
         {/* Profile details */}
         <div className="rounded-[1.5rem] border border-[color:var(--border)] bg-white p-6 space-y-4">
           <h2 className="text-xs font-semibold uppercase tracking-[0.2em] text-[color:var(--muted)]">
-            Profile
+            Provider details
           </h2>
           <dl className="space-y-3 text-sm">
-            <Row label="Email">{provider.profile?.email ?? "—"}</Row>
+            <Row label="Email address">{provider.profile?.email ?? "—"}</Row>
             <Row label="Specialty">{provider.specialty ?? "—"}</Row>
-            <Row label="License">{provider.license_number ?? "—"}</Row>
+            <Row label="License number">{provider.license_number ?? "—"}</Row>
             <Row label="Timezone">{provider.timezone}</Row>
           </dl>
           {provider.bio && (
@@ -86,7 +86,9 @@ export default async function ProviderProfilePage({
           </h2>
 
           {availability.length === 0 ? (
-            <p className="text-sm text-[color:var(--muted)]">No availability set.</p>
+            <p className="text-sm text-[color:var(--muted)]">
+              No booking windows have been added for this provider yet.
+            </p>
           ) : (
             <div className="space-y-3">
               {[1, 2, 3, 4, 5, 6, 0].map((day) => {
@@ -101,7 +103,7 @@ export default async function ProviderProfilePage({
                       {windows.map((w) => (
                         <span key={w.id} className="text-[color:var(--muted)]">
                           {w.start_time.slice(0, 5)} – {w.end_time.slice(0, 5)}{" "}
-                          <span className="text-xs">({w.slot_minutes}min slots)</span>
+                          <span className="text-xs">({w.slot_minutes}-minute visits)</span>
                         </span>
                       ))}
                     </div>

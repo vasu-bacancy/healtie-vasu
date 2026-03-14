@@ -9,6 +9,9 @@ export default function SlotPicker({ slots }: { slots: Slot[] }) {
 
   return (
     <div className="space-y-2">
+      <p className="text-xs text-[color:var(--muted)]">
+        Choose the appointment start time that works best.
+      </p>
       <div className="grid grid-cols-2 gap-2">
         {slots.map((slot) => (
           <label
@@ -37,6 +40,11 @@ export default function SlotPicker({ slots }: { slots: Slot[] }) {
         name="scheduled_end"
         value={selected?.end ?? ""}
       />
+      {selected && (
+        <p className="text-xs text-[color:var(--muted)]">
+          Selected time: {selected.label}
+        </p>
+      )}
     </div>
   );
 }

@@ -44,8 +44,11 @@ export default async function NewProviderPage({
           ← Providers
         </Link>
         <h1 className="text-3xl font-semibold tracking-tight text-[color:var(--foreground)]">
-          Add provider
+          Create provider account
         </h1>
+        <p className="text-sm text-[color:var(--muted)]">
+          Invite a provider so they can sign in, set availability, and document visits.
+        </p>
       </header>
 
       <div className="mx-auto max-w-xl">
@@ -62,7 +65,7 @@ export default async function NewProviderPage({
                 className={inputCls} />
             </Field>
 
-            <Field label="Email" required>
+            <Field label="Email address" required>
               <input name="email" type="email" required placeholder="jane@clinic.com"
                 className={inputCls} />
             </Field>
@@ -114,7 +117,7 @@ export default async function NewProviderPage({
               type="submit"
               className="rounded-[1rem] bg-[color:var(--accent)] px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-[color:var(--accent-strong)]"
             >
-              Add provider
+              Create provider account
             </button>
           </div>
         </form>

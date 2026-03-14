@@ -33,8 +33,12 @@ export default function RegisterForm({ slug }: { slug: string }) {
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-3">
-      {/* Full name */}
-      <Field label="Full name" error={errors.full_name?.message} required>
+      <Field
+        label="Full name"
+        description="Use the same name your care team expects to see in your chart."
+        error={errors.full_name?.message}
+        required
+      >
         <input
           id="full_name"
           type="text"
@@ -44,8 +48,12 @@ export default function RegisterForm({ slug }: { slug: string }) {
         />
       </Field>
 
-      {/* Email */}
-      <Field label="Email" error={errors.email?.message} required>
+      <Field
+        label="Email address"
+        description="We'll use this to sign you in and send appointment updates."
+        error={errors.email?.message}
+        required
+      >
         <input
           id="email"
           type="email"
@@ -55,8 +63,12 @@ export default function RegisterForm({ slug }: { slug: string }) {
         />
       </Field>
 
-      {/* Password */}
-      <Field label="Password" error={errors.password?.message} required>
+      <Field
+        label="Create a password"
+        description="Use at least 8 characters."
+        error={errors.password?.message}
+        required
+      >
         <input
           id="password"
           type="password"
@@ -66,8 +78,12 @@ export default function RegisterForm({ slug }: { slug: string }) {
         />
       </Field>
 
-      {/* Confirm password */}
-      <Field label="Confirm password" error={errors.confirm_password?.message} required>
+      <Field
+        label="Confirm password"
+        description="Enter the same password again to avoid sign-in issues."
+        error={errors.confirm_password?.message}
+        required
+      >
         <input
           id="confirm_password"
           type="password"
@@ -77,9 +93,13 @@ export default function RegisterForm({ slug }: { slug: string }) {
         />
       </Field>
 
-      {/* DOB + Sex side by side */}
       <div className="grid grid-cols-2 gap-3">
-        <Field label="Date of birth" error={errors.dob?.message} required>
+        <Field
+          label="Date of birth"
+          description="This helps your care team match the right record."
+          error={errors.dob?.message}
+          required
+        >
           <input
             id="dob"
             type="date"
@@ -88,7 +108,12 @@ export default function RegisterForm({ slug }: { slug: string }) {
           />
         </Field>
 
-        <Field label="Sex" error={errors.sex?.message} required>
+        <Field
+          label="Sex"
+          description="Choose the sex listed on your clinical record."
+          error={errors.sex?.message}
+          required
+        >
           <select
             id="sex"
             {...register("sex")}
@@ -96,7 +121,7 @@ export default function RegisterForm({ slug }: { slug: string }) {
             defaultValue=""
           >
             <option value="" disabled>
-              — Select —
+              Select an option
             </option>
             <option value="Male">Male</option>
             <option value="Female">Female</option>
@@ -106,8 +131,11 @@ export default function RegisterForm({ slug }: { slug: string }) {
         </Field>
       </div>
 
-      {/* Phone (optional) */}
-      <Field label="Phone (optional)" error={errors.phone?.message}>
+      <Field
+        label="Phone number"
+        description="Optional. Use this if you want reminder calls or texts."
+        error={errors.phone?.message}
+      >
         <input
           id="phone"
           type="tel"
@@ -117,7 +145,6 @@ export default function RegisterForm({ slug }: { slug: string }) {
         />
       </Field>
 
-      {/* Server error */}
       {serverError && (
         <p className="rounded-xl bg-[color:#fef2f2] px-4 py-3 text-sm text-[color:#c13b3b]">
           {serverError}
@@ -129,7 +156,7 @@ export default function RegisterForm({ slug }: { slug: string }) {
         disabled={isPending}
         className="mt-1 rounded-[1.25rem] bg-[color:var(--accent)] px-4 py-3 text-sm font-semibold text-white transition hover:bg-[color:var(--accent-strong)] disabled:cursor-not-allowed disabled:opacity-60"
       >
-        {isPending ? "Creating account…" : "Create account"}
+        {isPending ? "Creating your account…" : "Create patient account"}
       </button>
     </form>
   );
@@ -143,11 +170,13 @@ function inputCls(hasError: boolean) {
 
 function Field({
   label,
+  description,
   error,
   required,
   children,
 }: {
   label: string;
+  description?: string;
   error?: string;
   required?: boolean;
   children: React.ReactNode;
@@ -158,6 +187,7 @@ function Field({
         {label}
         {required && <span className="ml-0.5 text-[color:#c13b3b]"> *</span>}
       </label>
+      {description && <p className="mt-1 text-xs text-[color:var(--muted)]">{description}</p>}
       {children}
       {error && <p className="mt-1 text-xs text-[color:#c13b3b]">{error}</p>}
     </div>

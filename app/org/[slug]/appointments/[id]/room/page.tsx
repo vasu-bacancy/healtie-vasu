@@ -11,7 +11,7 @@ import { updateAppointmentStatus } from "../../actions";
 const STATUS_TRANSITIONS: Record<string, { label: string; next: string }[]> = {
   scheduled: [{ label: "Check in patient", next: "checked_in" }],
   checked_in: [{ label: "Start visit", next: "in_progress" }],
-  in_progress: [{ label: "Complete visit", next: "completed" }],
+  in_progress: [{ label: "End visit and mark complete", next: "completed" }],
   completed: [],
   cancelled: [],
 };
@@ -60,7 +60,7 @@ export default async function VisitRoomPage({
             ← Appointment details
           </Link>
           <h1 className="text-3xl font-semibold tracking-tight text-[color:var(--foreground)]">
-            Visit room
+            Virtual visit room
           </h1>
           <p className="text-sm text-[color:var(--muted)]">
             {format(new Date(appt.scheduled_start), "EEEE, MMMM d, yyyy")} ·{" "}
@@ -107,7 +107,7 @@ export default async function VisitRoomPage({
               </div>
               {appt.reason && (
                 <div className="flex items-start justify-between gap-4">
-                  <span className="text-[color:var(--muted)]">Reason</span>
+                  <span className="text-[color:var(--muted)]">Visit reason</span>
                   <span className="text-right font-medium text-[color:var(--foreground)]">
                     {appt.reason}
                   </span>
@@ -122,6 +122,9 @@ export default async function VisitRoomPage({
               <h2 className="text-xs font-semibold uppercase tracking-[0.2em] text-[color:var(--muted)]">
                 Visit controls
               </h2>
+              <p className="text-sm text-[color:var(--muted)]">
+                Update the visit status as the patient arrives, the call starts, and the visit ends.
+              </p>
               {transitions.length > 0 ? (
                 <div className="flex flex-wrap gap-2">
                   {transitions.map((t) => (
@@ -152,7 +155,7 @@ export default async function VisitRoomPage({
                 </div>
               ) : (
                 <p className="text-sm text-[color:var(--muted)]">
-                  No further actions available.
+                  This visit is already in its final state.
                 </p>
               )}
             </div>
@@ -206,17 +209,19 @@ export default async function VisitRoomPage({
                 rel="noopener noreferrer"
                 className="block w-full rounded-[1rem] bg-emerald-600 px-4 py-3 text-center text-sm font-semibold text-white transition hover:bg-emerald-700"
               >
-                Join meeting →
+                Join video visit
               </a>
             ) : (
               <div className="space-y-2">
-                <p className="text-sm text-[color:var(--muted)]">No meeting link set.</p>
+                <p className="text-sm text-[color:var(--muted)]">
+                  No video link has been added yet.
+                </p>
                 {canManage && (
                   <Link
                     href={`/org/${slug}/appointments/${id}`}
                     className="text-xs font-semibold text-[color:var(--accent)] hover:underline"
                   >
-                    Add meeting link →
+                    Go to appointment details to add a link
                   </Link>
                 )}
               </div>
@@ -233,10 +238,10 @@ export default async function VisitRoomPage({
                 Clinical note
               </p>
               <p className="mt-2 text-sm font-semibold text-[color:var(--foreground)]">
-                Write SOAP note →
+                Open SOAP note
               </p>
               <p className="mt-1 text-xs text-[color:var(--muted)]">
-                Document subjective, objective, assessment, and plan.
+                Capture the visit summary before you close the patient chart.
               </p>
             </Link>
           )}
@@ -247,7 +252,7 @@ export default async function VisitRoomPage({
                 Clinical note
               </p>
               <p className="mt-2 text-sm text-[color:var(--muted)]">
-                Start the visit to unlock the SOAP note.
+                Start the visit to open the SOAP note.
               </p>
             </div>
           )}

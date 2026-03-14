@@ -33,19 +33,22 @@ export default async function PatientProfilePage({
           {membership.organization.name}
         </p>
         <h1 className="mt-1 text-3xl font-semibold tracking-tight text-[color:var(--foreground)]">
-          My profile
+          Intake profile
         </h1>
+        <p className="mt-2 text-sm text-[color:var(--muted)]">
+          Keep these details current so your care team can prepare for your visit.
+        </p>
       </header>
 
       {saved === "1" && (
         <div className="rounded-[1.25rem] border border-emerald-200 bg-emerald-50 px-5 py-4 text-sm font-semibold text-emerald-800">
-          Profile saved successfully.
+          Intake details saved. Your care team can now use this information for upcoming visits.
         </div>
       )}
 
       {!patient.intake_completed && (
         <div className="rounded-[1.25rem] border border-amber-200 bg-amber-50 px-5 py-4 text-sm text-amber-800">
-          <strong>Action required:</strong> Please complete your profile so your care team has the information they need before your visit.
+          <strong>Action required:</strong> Finish your intake details before your next visit.
         </div>
       )}
 
@@ -53,7 +56,7 @@ export default async function PatientProfilePage({
         <form action={updatePatientProfile} className="space-y-4">
           <div className="rounded-[1.5rem] border border-[color:var(--border)] bg-white p-6 space-y-4">
             <h2 className="text-xs font-semibold uppercase tracking-[0.2em] text-[color:var(--muted)]">
-              Demographics
+              Your details
             </h2>
 
             <Field label="Full name" required>
@@ -77,9 +80,9 @@ export default async function PatientProfilePage({
               />
             </Field>
 
-            <Field label="Sex">
+            <Field label="Sex" hint="Choose the sex listed on your clinical record.">
               <select name="sex" defaultValue={patient.sex ?? ""} className={inputCls}>
-                <option value="">— Select —</option>
+                <option value="">Select an option</option>
                 <option value="Male">Male</option>
                 <option value="Female">Female</option>
                 <option value="Other">Other</option>
@@ -87,7 +90,7 @@ export default async function PatientProfilePage({
               </select>
             </Field>
 
-            <Field label="Phone">
+            <Field label="Phone number" hint="Optional. Add a number if you'd like appointment reminders.">
               <input
                 name="phone"
                 type="tel"
@@ -97,7 +100,7 @@ export default async function PatientProfilePage({
               />
             </Field>
 
-            <Field label="Email">
+            <Field label="Email address">
               <input
                 name="email"
                 type="email"
@@ -113,7 +116,7 @@ export default async function PatientProfilePage({
               type="submit"
               className="rounded-[1rem] bg-[color:var(--accent)] px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-[color:var(--accent-strong)]"
             >
-              Save profile
+              Save intake details
             </button>
           </div>
         </form>
@@ -128,10 +131,12 @@ const inputCls =
 function Field({
   label,
   required,
+  hint,
   children,
 }: {
   label: string;
   required?: boolean;
+  hint?: string;
   children: React.ReactNode;
 }) {
   return (
@@ -141,6 +146,7 @@ function Field({
         {required && <span className="ml-0.5 text-[color:#c13b3b]"> *</span>}
       </label>
       {children}
+      {hint && <p className="text-xs text-[color:var(--muted)]">{hint}</p>}
     </div>
   );
 }

@@ -33,8 +33,11 @@ export default async function NewPatientPage({
         </Link>
         <div>
           <h1 className="text-3xl font-semibold tracking-tight text-[color:var(--foreground)]">
-            Register patient
+            Add a patient
           </h1>
+          <p className="mt-2 text-sm text-[color:var(--muted)]">
+            Create a patient record so the team can schedule visits and keep clinical notes in one place.
+          </p>
         </div>
       </header>
 
@@ -90,7 +93,7 @@ export default async function NewPatientPage({
                   name="sex"
                   className="w-full rounded-xl border border-[color:var(--border)] bg-transparent px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[color:var(--accent)]"
                 >
-                  <option value="">— Select —</option>
+                  <option value="">Select an option</option>
                   <option value="Male">Male</option>
                   <option value="Female">Female</option>
                   <option value="Other">Other</option>
@@ -109,7 +112,7 @@ export default async function NewPatientPage({
                 htmlFor="email"
                 className="text-sm font-semibold text-[color:var(--foreground)]"
               >
-                Email
+                Email address
               </label>
               <input
                 id="email"
@@ -125,7 +128,7 @@ export default async function NewPatientPage({
                 htmlFor="phone"
                 className="text-sm font-semibold text-[color:var(--foreground)]"
               >
-                Phone
+                Phone number
               </label>
               <input
                 id="phone"
@@ -142,13 +145,13 @@ export default async function NewPatientPage({
               href={`/org/${slug}/patients`}
               className="rounded-[1rem] border border-[color:var(--border)] px-4 py-2.5 text-sm font-semibold text-[color:var(--foreground)] transition hover:bg-[color:var(--surface-strong)]"
             >
-              Cancel
+              Back to patients
             </Link>
             <button
               type="submit"
               className="rounded-[1rem] bg-[color:var(--accent)] px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-[color:var(--accent-strong)]"
             >
-              Register patient
+              Create patient record
             </button>
           </div>
         </form>

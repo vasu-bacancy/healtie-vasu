@@ -37,12 +37,14 @@ export async function bookAppointment(formData: FormData) {
       profile.id,
       membership.organization_id,
     );
-    if (!patient) throw new Error("No patient record found for your account.");
+    if (!patient) {
+      throw new Error("We couldn't find a patient record for this account. Ask your clinic to finish setup.");
+    }
     patient_id = patient.id;
   }
 
   if (!patient_id || !provider_id || !scheduled_start || !scheduled_end) {
-    throw new Error("Missing required booking fields.");
+    throw new Error("Choose a provider, date, and time before you book the visit.");
   }
 
   const { data: appt, error } = await supabase
@@ -69,7 +71,9 @@ export async function bookAppointment(formData: FormData) {
 export async function updateAppointmentStatus(formData: FormData) {
   const { supabase, membership, profile } = await getAuthContext();
 
-  if (membership.role === "patient") throw new Error("Unauthorized");
+  if (membership.role === "patient") {
+    throw new Error("Patients can't update visit status. Ask your care team for help.");
+  }
 
   const id = formData.get("id") as string;
   const status = formData.get("status") as AppointmentStatus;
@@ -130,7 +134,9 @@ export async function updateAppointmentStatus(formData: FormData) {
 export async function updateMeetingUrl(formData: FormData) {
   const { supabase, membership } = await getAuthContext();
 
-  if (membership.role === "patient") throw new Error("Unauthorized");
+  if (membership.role === "patient") {
+    throw new Error("Patients can't edit the meeting link.");
+  }
 
   const id = formData.get("id") as string;
   const meeting_url = (formData.get("meeting_url") as string).trim() || null;

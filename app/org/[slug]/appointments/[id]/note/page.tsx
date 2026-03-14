@@ -56,13 +56,13 @@ export default async function SoapNotePage({
         </header>
         <div className="rounded-[1.5rem] border border-[color:var(--border)] bg-white p-10 text-center">
           <p className="text-sm text-[color:var(--muted)]">
-            No encounter found. Start the visit first to create a SOAP note.
+            Start the visit from the visit room before you create a note.
           </p>
           <Link
             href={`/org/${slug}/appointments/${id}/room`}
             className="mt-4 inline-block text-sm font-semibold text-[color:var(--accent)] hover:underline"
           >
-            Go to visit room →
+            Go to visit room
           </Link>
         </div>
       </section>
@@ -94,6 +94,9 @@ export default async function SoapNotePage({
             {appt.patient.full_name} ·{" "}
             {format(new Date(appt.scheduled_start), "MMM d, yyyy")}
           </p>
+          <p className="text-sm text-[color:var(--muted)]">
+            Save a draft while the visit is in progress, then sign the note when it is final.
+          </p>
         </div>
         {isSigned && (
           <span className="mt-1 inline-flex rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700">
@@ -104,7 +107,7 @@ export default async function SoapNotePage({
 
       {saved === "1" && !isSigned && (
         <div className="rounded-[1.25rem] border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-800">
-          Note saved as draft.
+          Draft saved. Review it, then sign when you&apos;re ready to file it.
         </div>
       )}
 
@@ -127,6 +130,7 @@ export default async function SoapNotePage({
                 </span>
                 {field.charAt(0).toUpperCase() + field.slice(1)}
               </label>
+              <p className="text-xs text-[color:var(--muted)]">{FIELD_GUIDANCE[field]}</p>
               <textarea
                 id={field}
                 name={field}
@@ -145,7 +149,7 @@ export default async function SoapNotePage({
                 type="submit"
                 className="rounded-[1rem] border border-[color:var(--border)] px-4 py-2.5 text-sm font-semibold text-[color:var(--foreground)] transition hover:bg-[color:var(--surface-strong)]"
               >
-                Save draft
+                Save draft note
               </button>
             </div>
           )}
@@ -161,7 +165,7 @@ export default async function SoapNotePage({
               type="submit"
               className="w-full rounded-[1rem] bg-[color:var(--accent)] px-4 py-3 text-sm font-semibold text-white transition hover:bg-[color:var(--accent-strong)]"
             >
-              Sign &amp; file note
+              Sign and file note
             </button>
             <p className="mt-2 text-center text-xs text-[color:var(--muted)]">
               Once signed, the note will appear in the patient&apos;s chart and cannot be edited.
@@ -175,7 +179,7 @@ export default async function SoapNotePage({
               href={`/org/${slug}/patients/${appt.patient_id}`}
               className="text-sm font-semibold text-[color:var(--accent)] hover:underline"
             >
-              View in patient chart →
+              Open patient chart
             </Link>
           </div>
         )}
@@ -189,4 +193,11 @@ const PLACEHOLDERS: Record<string, string> = {
   objective: "Vital signs, physical exam findings, lab results, observations…",
   assessment: "Diagnosis or differential diagnosis based on subjective and objective data…",
   plan: "Treatment plan, medications, referrals, follow-up instructions…",
+};
+
+const FIELD_GUIDANCE: Record<string, string> = {
+  subjective: "What the patient reports and why they came in today.",
+  objective: "What you observed, measured, or confirmed during the visit.",
+  assessment: "Your clinical impression based on the information gathered.",
+  plan: "What happens next, including treatment, follow-up, and referrals.",
 };

@@ -61,7 +61,7 @@ export default async function PatientChartPage({
                   : "bg-zinc-100 text-zinc-500"
               }`}
             >
-              {patient.status}
+              {patient.status === "active" ? "Active" : patient.status}
             </span>
             <span
               className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-semibold ${
@@ -70,7 +70,7 @@ export default async function PatientChartPage({
                   : "bg-amber-50 text-amber-700"
               }`}
             >
-              Intake {patient.intake_completed ? "complete" : "pending"}
+              {patient.intake_completed ? "Intake complete" : "Needs intake"}
             </span>
           </div>
         </div>
@@ -104,7 +104,9 @@ export default async function PatientChartPage({
           </h2>
 
           {allergies.length === 0 ? (
-            <p className="text-sm text-[color:var(--muted)]">No allergies on record.</p>
+            <p className="text-sm text-[color:var(--muted)]">
+              No allergies have been recorded for this patient yet.
+            </p>
           ) : (
             <ul className="space-y-2">
               {allergies.map((a) => (
@@ -146,7 +148,7 @@ export default async function PatientChartPage({
                 type="submit"
                 className="rounded-[0.75rem] bg-[color:var(--accent)] px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-[color:var(--accent-strong)]"
               >
-                Add
+                Add allergy
               </button>
             </form>
           )}
@@ -159,7 +161,9 @@ export default async function PatientChartPage({
           </h2>
 
           {medications.length === 0 ? (
-            <p className="text-sm text-[color:var(--muted)]">No medications on record.</p>
+            <p className="text-sm text-[color:var(--muted)]">
+              No medications have been recorded for this patient yet.
+            </p>
           ) : (
             <ul className="space-y-2">
               {medications.map((m) => (
@@ -203,7 +207,7 @@ export default async function PatientChartPage({
                 type="submit"
                 className="rounded-[0.75rem] bg-[color:var(--accent)] px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-[color:var(--accent-strong)]"
               >
-                Add
+                Add medication
               </button>
             </form>
           )}
@@ -216,7 +220,9 @@ export default async function PatientChartPage({
           </h2>
 
           {notes.length === 0 ? (
-            <p className="text-sm text-[color:var(--muted)]">No notes yet.</p>
+            <p className="text-sm text-[color:var(--muted)]">
+              No signed visit notes are in this chart yet.
+            </p>
           ) : (
             <ul className="space-y-3">
               {notes.map((note) => (

@@ -36,20 +36,34 @@ export default async function ProvidersPage({
           <h1 className="mt-1 text-3xl font-semibold tracking-tight text-[color:var(--foreground)]">
             Providers
           </h1>
+          <p className="mt-2 text-sm text-[color:var(--muted)]">
+            Manage the clinicians patients can book with in this organization.
+          </p>
         </div>
         {membership.role === "org_admin" && (
           <Link
             href={`/org/${slug}/providers/new`}
             className="rounded-[1rem] bg-[color:var(--accent)] px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-[color:var(--accent-strong)]"
           >
-            Add provider
+            Add a provider
           </Link>
         )}
       </header>
 
       {providers.length === 0 ? (
         <div className="rounded-[1.5rem] border border-[color:var(--border)] bg-white p-12 text-center">
-          <p className="text-sm text-[color:var(--muted)]">No providers in this organization.</p>
+          <p className="text-sm font-semibold text-[color:var(--foreground)]">No providers added yet</p>
+          <p className="mt-1 text-sm text-[color:var(--muted)]">
+            Add a provider before patients can book new visits.
+          </p>
+          {membership.role === "org_admin" && (
+            <Link
+              href={`/org/${slug}/providers/new`}
+              className="mt-5 inline-block rounded-[1rem] bg-[color:var(--accent)] px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-[color:var(--accent-strong)]"
+            >
+              Add the first provider
+            </Link>
+          )}
         </div>
       ) : (
         <div className="overflow-hidden rounded-[1.5rem] border border-[color:var(--border)] bg-white">
@@ -83,7 +97,7 @@ export default async function ProvidersPage({
                       href={`/org/${slug}/providers/${p.id}`}
                       className="text-xs font-semibold text-[color:var(--accent)] hover:underline"
                     >
-                      View profile
+                      Open profile
                     </Link>
                   </td>
                 </tr>

@@ -46,7 +46,7 @@ export default async function AvailabilityPage({
         </header>
         <div className="rounded-[1.5rem] border border-[color:var(--border)] bg-white p-10 text-center">
           <p className="text-sm text-[color:var(--muted)]">
-            No provider record found for your account. Contact an administrator.
+            This account is not linked to a provider profile yet. Ask a clinic admin to finish setup.
           </p>
         </div>
       </section>
@@ -76,7 +76,7 @@ export default async function AvailabilityPage({
           My availability
         </h1>
         <p className="mt-1 text-sm text-[color:var(--muted)]">
-          Manage the weekly windows when patients can book appointments with you.
+          Set the weekly hours when patients can book time with you.
         </p>
       </header>
 
@@ -88,7 +88,7 @@ export default async function AvailabilityPage({
 
         {availability.length === 0 ? (
           <p className="text-sm text-[color:var(--muted)]">
-            No availability set. Add windows below.
+            No bookable hours yet. Add your first weekly window below.
           </p>
         ) : (
           <div className="space-y-2">
@@ -110,7 +110,7 @@ export default async function AvailabilityPage({
                           {w.start_time.slice(0, 5)} – {w.end_time.slice(0, 5)}
                         </span>
                         <span className="text-xs text-[color:var(--muted)]">
-                          {w.slot_minutes}min slots
+                          {w.slot_minutes}-minute visits
                         </span>
                         <form action={deleteAvailability}>
                           <input type="hidden" name="id" value={w.id} />
@@ -118,7 +118,7 @@ export default async function AvailabilityPage({
                             type="submit"
                             className="text-xs text-[color:#c13b3b] hover:underline"
                           >
-                            Remove
+                            Remove window
                           </button>
                         </form>
                       </div>
@@ -175,16 +175,16 @@ export default async function AvailabilityPage({
           </div>
 
           <div className="space-y-1">
-            <label className="text-xs font-semibold text-[color:var(--muted)]">Slot (min)</label>
+            <label className="text-xs font-semibold text-[color:var(--muted)]">Visit length</label>
             <select
               name="slot_minutes"
               defaultValue="30"
               className="w-full rounded-xl border border-[color:var(--border)] bg-transparent px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[color:var(--accent)]"
             >
-              <option value="15">15 min</option>
-              <option value="30">30 min</option>
-              <option value="45">45 min</option>
-              <option value="60">60 min</option>
+              <option value="15">15 minutes</option>
+              <option value="30">30 minutes</option>
+              <option value="45">45 minutes</option>
+              <option value="60">60 minutes</option>
             </select>
           </div>
 
@@ -193,7 +193,7 @@ export default async function AvailabilityPage({
               type="submit"
               className="rounded-[1rem] bg-[color:var(--accent)] px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-[color:var(--accent-strong)]"
             >
-              Add window
+              Add booking window
             </button>
           </div>
         </form>

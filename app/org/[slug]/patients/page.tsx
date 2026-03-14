@@ -42,7 +42,7 @@ export default async function PatientsPage({
             href={`/org/${slug}/patients/new`}
             className="rounded-[1rem] bg-[color:var(--accent)] px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-[color:var(--accent-strong)]"
           >
-            Add patient
+            Add a patient
           </Link>
         )}
       </header>
@@ -51,14 +51,14 @@ export default async function PatientsPage({
         <div className="rounded-[1.5rem] border border-[color:var(--border)] bg-white p-12 text-center">
           <p className="text-sm font-semibold text-[color:var(--foreground)]">No patients yet</p>
           <p className="mt-1 text-sm text-[color:var(--muted)]">
-            Register the first patient to get started.
+            Add your first patient so the care team can book visits and document care.
           </p>
           {canManage && (
             <Link
               href={`/org/${slug}/patients/new`}
               className="mt-5 inline-block rounded-[1rem] bg-[color:var(--accent)] px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-[color:var(--accent-strong)]"
             >
-              Register patient
+              Add the first patient
             </Link>
           )}
         </div>
@@ -99,7 +99,7 @@ export default async function PatientsPage({
                           : "bg-zinc-100 text-zinc-500"
                       }`}
                     >
-                      {patient.status}
+                      {patient.status === "active" ? "Active" : patient.status}
                     </span>
                   </td>
                   <td className="px-6 py-4">
@@ -110,7 +110,7 @@ export default async function PatientsPage({
                           : "bg-amber-50 text-amber-700"
                       }`}
                     >
-                      {patient.intake_completed ? "Complete" : "Pending"}
+                      {patient.intake_completed ? "Complete" : "Needs intake"}
                     </span>
                   </td>
                   <td className="px-6 py-4 text-right">

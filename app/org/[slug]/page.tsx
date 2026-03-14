@@ -8,6 +8,13 @@ import { getPatients } from "@/lib/db/patients";
 import { getProviders, getProviderByProfileId, getProviderAppointmentsForDate } from "@/lib/db/providers";
 import { getAppointments, getPatientAppointments, getPatientByProfileId, STATUS_LABEL, STATUS_COLOR } from "@/lib/db/appointments";
 
+type PendingNoteRow = {
+  id: string;
+  created_at: string;
+  patient: { full_name: string } | { full_name: string }[] | null;
+  encounter: { appointment_id: string | null } | { appointment_id: string | null }[] | null;
+};
+
 export default async function OrgDashboardPage({
   params,
 }: {
@@ -47,7 +54,10 @@ export default async function OrgDashboardPage({
       <section className="space-y-6">
         <header className="border-b border-[color:var(--border)] pb-6">
           <p className="text-sm font-semibold text-[color:var(--muted)]">{membership.organization.name}</p>
-          <h1 className="mt-1 text-3xl font-semibold tracking-tight text-[color:var(--foreground)]">Dashboard</h1>
+          <h1 className="mt-1 text-3xl font-semibold tracking-tight text-[color:var(--foreground)]">Clinic dashboard</h1>
+          <p className="mt-2 text-sm text-[color:var(--muted)]">
+            Track your patient volume, provider coverage, and the next scheduled visits.
+          </p>
         </header>
 
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
@@ -60,10 +70,12 @@ export default async function OrgDashboardPage({
         <div className="rounded-[1.5rem] border border-[color:var(--border)] bg-white p-6 space-y-4">
           <div className="flex items-center justify-between">
             <h2 className="text-xs font-semibold uppercase tracking-[0.2em] text-[color:var(--muted)]">Upcoming appointments</h2>
-            <Link href={`/org/${slug}/appointments`} className="text-xs font-semibold text-[color:var(--accent)] hover:underline">View all</Link>
+            <Link href={`/org/${slug}/appointments`} className="text-xs font-semibold text-[color:var(--accent)] hover:underline">See all appointments</Link>
           </div>
           {nextFive.length === 0 ? (
-            <p className="text-sm text-[color:var(--muted)]">No upcoming appointments.</p>
+            <p className="text-sm text-[color:var(--muted)]">
+              No appointments are scheduled yet. New bookings will appear here automatically.
+            </p>
           ) : (
             <ul className="divide-y divide-[color:var(--border)]">
               {nextFive.map((appt) => (
@@ -78,7 +90,7 @@ export default async function OrgDashboardPage({
                     <span className={`inline-flex rounded-full px-2 py-0.5 text-xs font-semibold ${STATUS_COLOR[appt.status]}`}>
                       {STATUS_LABEL[appt.status]}
                     </span>
-                    <Link href={`/org/${slug}/appointments/${appt.id}`} className="text-xs font-semibold text-[color:var(--accent)] hover:underline">View</Link>
+                    <Link href={`/org/${slug}/appointments/${appt.id}`} className="text-xs font-semibold text-[color:var(--accent)] hover:underline">Review visit</Link>
                   </div>
                 </li>
               ))}
@@ -109,6 +121,12 @@ export default async function OrgDashboardPage({
           .limit(5)
       : { data: [] };
 
+    const noteRows = ((pendingNotes ?? []) as PendingNoteRow[]).map((note) => ({
+      ...note,
+      patientName: extractPatientName(note.patient),
+      appointmentId: extractAppointmentId(note.encounter),
+    }));
+
     return (
       <section className="space-y-6">
         <header className="border-b border-[color:var(--border)] pb-6">
@@ -117,20 +135,25 @@ export default async function OrgDashboardPage({
             Today&apos;s schedule
           </h1>
           <p className="text-sm text-[color:var(--muted)]">{format(now, "EEEE, MMMM d, yyyy")}</p>
+          <p className="text-sm text-[color:var(--muted)]">
+            Start visits from this list, then finish any unsigned notes before you end the day.
+          </p>
         </header>
 
         <div className="grid gap-4 sm:grid-cols-2">
-          <StatCard title="Appointments today" value={todayAppts.length} href={`/org/${slug}/appointments`} />
-          <StatCard title="Unsigned notes" value={pendingNotes?.length ?? 0} href={`/org/${slug}/appointments`} accent={(pendingNotes?.length ?? 0) > 0} />
+          <StatCard title="Visits today" value={todayAppts.length} href={`/org/${slug}/appointments`} />
+          <StatCard title="Notes to sign" value={pendingNotes?.length ?? 0} href={`/org/${slug}/appointments`} accent={(pendingNotes?.length ?? 0) > 0} />
         </div>
 
         <div className="rounded-[1.5rem] border border-[color:var(--border)] bg-white p-6 space-y-4">
           <div className="flex items-center justify-between">
             <h2 className="text-xs font-semibold uppercase tracking-[0.2em] text-[color:var(--muted)]">Today&apos;s appointments</h2>
-            <Link href={`/org/${slug}/appointments`} className="text-xs font-semibold text-[color:var(--accent)] hover:underline">All appointments</Link>
+            <Link href={`/org/${slug}/appointments`} className="text-xs font-semibold text-[color:var(--accent)] hover:underline">See all appointments</Link>
           </div>
           {todayAppts.length === 0 ? (
-            <p className="text-sm text-[color:var(--muted)]">No appointments scheduled for today.</p>
+            <p className="text-sm text-[color:var(--muted)]">
+              Your schedule is clear today. New visits will show up here as soon as they are booked.
+            </p>
           ) : (
             <ul className="divide-y divide-[color:var(--border)]">
               {todayAppts.map((appt) => (
@@ -139,14 +162,14 @@ export default async function OrgDashboardPage({
                     <p className="font-semibold text-[color:var(--foreground)]">
                       {format(new Date(appt.scheduled_start), "h:mm a")} – {format(new Date(appt.scheduled_end), "h:mm a")}
                     </p>
-                    <p className="text-xs text-[color:var(--muted)]">{appt.reason ?? "No reason given"}</p>
+                    <p className="text-xs text-[color:var(--muted)]">{appt.reason ?? "No reason provided"}</p>
                   </div>
                   <div className="flex items-center gap-3">
                     <span className={`inline-flex rounded-full px-2 py-0.5 text-xs font-semibold ${STATUS_COLOR[appt.status]}`}>
                       {STATUS_LABEL[appt.status]}
                     </span>
                     <Link href={`/org/${slug}/appointments/${appt.id}/room`} className="text-xs font-semibold text-[color:var(--accent)] hover:underline">
-                      Room
+                      Open room
                     </Link>
                   </div>
                 </li>
@@ -157,24 +180,27 @@ export default async function OrgDashboardPage({
 
         {(pendingNotes?.length ?? 0) > 0 && (
           <div className="rounded-[1.5rem] border border-amber-200 bg-amber-50 p-6 space-y-4">
-            <h2 className="text-xs font-semibold uppercase tracking-[0.2em] text-amber-700">Unsigned notes</h2>
+            <h2 className="text-xs font-semibold uppercase tracking-[0.2em] text-amber-700">Finish notes</h2>
+            <p className="text-sm text-amber-800">
+              Sign these notes so they appear in the patient chart.
+            </p>
             <ul className="divide-y divide-amber-200">
-              {pendingNotes!.map((note: any) => (
+              {noteRows.map((note) => (
                 <li key={note.id} className="flex items-center justify-between py-3 text-sm">
                   <div>
                     <p className="font-semibold text-[color:var(--foreground)]">
-                      {(note.patient as any)?.full_name ?? "Unknown patient"}
+                      {note.patientName}
                     </p>
                     <p className="text-xs text-amber-700">
                       Created {format(new Date(note.created_at), "MMM d, h:mm a")}
                     </p>
                   </div>
-                  {(note.encounter as any)?.appointment_id && (
+                  {note.appointmentId && (
                     <Link
-                      href={`/org/${slug}/appointments/${(note.encounter as any).appointment_id}/note`}
+                      href={`/org/${slug}/appointments/${note.appointmentId}/note`}
                       className="text-xs font-semibold text-[color:var(--accent)] hover:underline"
                     >
-                      Sign note
+                      Finish note
                     </Link>
                   )}
                 </li>
@@ -203,18 +229,21 @@ export default async function OrgDashboardPage({
         <h1 className="mt-1 text-3xl font-semibold tracking-tight text-[color:var(--foreground)]">
           Welcome back{profile.full_name ? `, ${profile.full_name.split(" ")[0]}` : ""}
         </h1>
+        <p className="mt-2 text-sm text-[color:var(--muted)]">
+          Book your next visit, join when it&apos;s time, and keep your intake details up to date.
+        </p>
       </header>
 
       {patient && !patient.intake_completed && (
         <div className="rounded-[1.25rem] border border-amber-200 bg-amber-50 px-5 py-4 flex items-center justify-between gap-4">
           <p className="text-sm text-amber-800">
-            <strong>Complete your profile</strong> — your care team needs your demographics before your first visit.
+            <strong>Finish intake</strong> so your care team has the details they need before your first visit.
           </p>
           <a
             href={`/org/${slug}/profile`}
             className="shrink-0 rounded-[1rem] bg-amber-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-amber-700"
           >
-            Complete now
+            Finish intake
           </a>
         </div>
       )}
@@ -227,7 +256,7 @@ export default async function OrgDashboardPage({
       {/* Next appointment */}
       {nextAppt ? (
         <div className="rounded-[1.5rem] border border-[color:var(--border)] bg-white p-6 space-y-4">
-          <h2 className="text-xs font-semibold uppercase tracking-[0.2em] text-[color:var(--muted)]">Next appointment</h2>
+          <h2 className="text-xs font-semibold uppercase tracking-[0.2em] text-[color:var(--muted)]">Your next visit</h2>
           <div className="space-y-1">
             <p className="text-lg font-semibold text-[color:var(--foreground)]">
               {format(new Date(nextAppt.scheduled_start), "EEEE, MMMM d")}
@@ -248,26 +277,28 @@ export default async function OrgDashboardPage({
                 rel="noopener noreferrer"
                 className="rounded-[1rem] bg-emerald-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-emerald-700"
               >
-                Join meeting →
+                Join video visit
               </a>
             )}
             <Link
               href={`/org/${slug}/appointments/${nextAppt.id}`}
               className="rounded-[1rem] border border-[color:var(--border)] px-4 py-2.5 text-sm font-semibold text-[color:var(--foreground)] transition hover:bg-[color:var(--surface-strong)]"
             >
-              View details
+              View appointment
             </Link>
           </div>
         </div>
       ) : (
         <div className="rounded-[1.5rem] border border-[color:var(--border)] bg-white p-6 space-y-3">
-          <h2 className="text-xs font-semibold uppercase tracking-[0.2em] text-[color:var(--muted)]">Next appointment</h2>
-          <p className="text-sm text-[color:var(--muted)]">No upcoming appointments.</p>
+          <h2 className="text-xs font-semibold uppercase tracking-[0.2em] text-[color:var(--muted)]">Your next visit</h2>
+          <p className="text-sm text-[color:var(--muted)]">
+            You don&apos;t have an upcoming visit yet. Book an appointment to choose a time that works for you.
+          </p>
           <Link
             href={`/org/${slug}/appointments/new`}
             className="inline-block rounded-[1rem] bg-[color:var(--accent)] px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-[color:var(--accent-strong)]"
           >
-            Book an appointment
+            Book appointment
           </Link>
         </div>
       )}
@@ -280,21 +311,41 @@ export default async function OrgDashboardPage({
             className="rounded-[1.5rem] border border-[color:var(--border)] bg-white p-5 transition hover:bg-[color:var(--surface)]"
           >
             <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[color:var(--muted)]">My chart</p>
-            <p className="mt-2 text-sm font-semibold text-[color:var(--foreground)]">View health record →</p>
-            <p className="mt-1 text-xs text-[color:var(--muted)]">Allergies, medications, clinical notes</p>
+            <p className="mt-2 text-sm font-semibold text-[color:var(--foreground)]">Review your health record</p>
+            <p className="mt-1 text-xs text-[color:var(--muted)]">See allergies, medications, and signed notes.</p>
           </Link>
           <Link
             href={`/org/${slug}/appointments/new`}
             className="rounded-[1.5rem] border border-[color:var(--border)] bg-white p-5 transition hover:bg-[color:var(--surface)]"
           >
-            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[color:var(--muted)]">Book visit</p>
-            <p className="mt-2 text-sm font-semibold text-[color:var(--foreground)]">Schedule appointment →</p>
-            <p className="mt-1 text-xs text-[color:var(--muted)]">Find available slots with your provider</p>
+            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[color:var(--muted)]">Appointments</p>
+            <p className="mt-2 text-sm font-semibold text-[color:var(--foreground)]">Schedule an appointment</p>
+            <p className="mt-1 text-xs text-[color:var(--muted)]">Choose an open time with your provider.</p>
           </Link>
         </div>
       )}
     </section>
   );
+}
+
+function extractPatientName(
+  patient: PendingNoteRow["patient"],
+) {
+  if (Array.isArray(patient)) {
+    return patient[0]?.full_name ?? "Unknown patient";
+  }
+
+  return patient?.full_name ?? "Unknown patient";
+}
+
+function extractAppointmentId(
+  encounter: PendingNoteRow["encounter"],
+) {
+  if (Array.isArray(encounter)) {
+    return encounter[0]?.appointment_id ?? null;
+  }
+
+  return encounter?.appointment_id ?? null;
 }
 
 function StatCard({

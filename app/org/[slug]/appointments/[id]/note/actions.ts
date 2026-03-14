@@ -17,21 +17,23 @@ async function getNoteContext(appointmentId: string) {
   const profile = await ensureProfileForUser(supabase, user);
   const membership = await getActiveMembershipWithOrg(supabase, profile.id);
   if (!membership) redirect("/sign-in");
-  if (membership.role === "patient") throw new Error("Unauthorized");
+  if (membership.role === "patient") {
+    throw new Error("Patients can't create or sign visit notes.");
+  }
 
   const provider = await getProviderByProfileId(
     supabase,
     profile.id,
     membership.organization_id,
   );
-  if (!provider) throw new Error("No provider record found for this user.");
+  if (!provider) throw new Error("This account is not linked to a provider profile.");
 
   const encounter = await getEncounterByAppointmentId(
     supabase,
     appointmentId,
     membership.organization_id,
   );
-  if (!encounter) throw new Error("No encounter found. Start the visit first.");
+  if (!encounter) throw new Error("Start the visit before you create or sign the SOAP note.");
 
   return { supabase, membership, profile, provider, encounter };
 }

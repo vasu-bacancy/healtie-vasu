@@ -9,17 +9,17 @@ const dashboardStats: DashboardStat[] = [
   {
     label: "Tenant-safe foundation",
     value: "RLS First",
-    hint: "Every core record is designed around organization isolation.",
+    hint: "Every core record stays scoped to the active clinic.",
   },
   {
     label: "Core workflow",
     value: "Book -> Join -> Note",
-    hint: "The first release centers the patient-provider visit loop.",
+    hint: "The first release centers the patient and provider visit loop.",
   },
   {
     label: "Demo target",
     value: "12 Hours",
-    hint: "Optimized for a hackathon-quality MVP, not a full EHR rollout.",
+    hint: "Built to demo the core workflow quickly, not to replace a full EHR.",
   },
 ];
 
@@ -73,12 +73,11 @@ export default async function Home() {
                 <div>
                   <p className="section-label text-xs font-semibold">Healtie MVP Setup</p>
                   <h1 className="mt-4 max-w-3xl text-4xl font-semibold tracking-[-0.04em] sm:text-5xl lg:text-6xl">
-                    A multi-tenant virtual care workflow built on Next.js and Supabase auth.
+                    A virtual care workflow for clinics, providers, and patients.
                   </h1>
                   <p className="mt-4 max-w-3xl text-base leading-7 text-[color:var(--muted)] sm:text-lg">
-                    Start by signing in with a seeded organization to witness the tenant-safe flow from
-                    org admin ➜ provider ➜ patient ➜ visit note. The first release focuses on auth,
-                    availability, booking, virtual rooms, and clinical documentation.
+                    Sign in with the demo account to walk through the clinic admin, provider, and patient flows.
+                    This MVP focuses on sign-in, availability, booking, virtual visits, and clinical notes.
                   </p>
                 </div>
 
@@ -99,8 +98,7 @@ export default async function Home() {
               <div className="rounded-[1.75rem] border border-[color:var(--border)] bg-[color:var(--surface)] p-6 shadow-[0_20px_60px_rgba(24,33,43,0.08)]">
                 <p className="text-xs font-semibold text-[color:var(--accent-strong)]">Sign in</p>
                 <p className="mt-1 text-sm leading-6 text-[color:var(--muted)]">
-                  Use the seeded credentials (admin@northstar.test / Demo1234!) to enter the tenant
-                  environment and explore the dashboards.
+                  Use the demo account (admin@northstar.test / Demo1234!) to open the clinic workspace and explore each role.
                 </p>
                 <div className="mt-6">
                   <LoginForm />

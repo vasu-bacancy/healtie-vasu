@@ -58,7 +58,7 @@ export default async function AppointmentsPage({
             href={`/org/${slug}/appointments/new`}
             className="rounded-[1rem] bg-[color:var(--accent)] px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-[color:var(--accent-strong)]"
           >
-            Book appointment
+            Book a visit
           </Link>
         )}
       </header>
@@ -69,13 +69,13 @@ export default async function AppointmentsPage({
             No appointments yet
           </p>
           <p className="mt-1 text-sm text-[color:var(--muted)]">
-            Book an appointment to get started.
+            Book a visit to choose a provider, time, and meeting link.
           </p>
           <Link
             href={`/org/${slug}/appointments/new`}
             className="mt-5 inline-block rounded-[1rem] bg-[color:var(--accent)] px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-[color:var(--accent-strong)]"
           >
-            Book appointment
+            Book your first visit
           </Link>
         </div>
       ) : (
@@ -132,7 +132,7 @@ export default async function AppointmentsPage({
                       href={`/org/${slug}/appointments/${appt.id}`}
                       className="text-xs font-semibold text-[color:var(--accent)] hover:underline"
                     >
-                      View
+                      View appointment
                     </Link>
                   </td>
                 </tr>

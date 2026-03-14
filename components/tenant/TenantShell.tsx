@@ -10,25 +10,25 @@ import type { Session } from "@supabase/supabase-js";
 
 const navConfig: Record<string, { label: string; href: string }[]> = {
   org_admin: [
-    { label: "Dashboard", href: "" },
-    { label: "Patients", href: "patients" },
+    { label: "Clinic overview", href: "" },
+    { label: "Patient records", href: "patients" },
     { label: "Providers", href: "providers" },
     { label: "Appointments", href: "appointments" },
   ],
   provider: [
-    { label: "Today", href: "" },
+    { label: "Today's schedule", href: "" },
     { label: "Appointments", href: "appointments" },
     { label: "Availability", href: "availability" },
   ],
   patient: [
-    { label: "Upcoming visits", href: "" },
-    { label: "Appointments", href: "appointments" },
-    { label: "My profile", href: "profile" },
+    { label: "Home", href: "" },
+    { label: "My visits", href: "appointments" },
+    { label: "Intake profile", href: "profile" },
   ],
 };
 
 const roleLabel: Record<string, string> = {
-  org_admin: "Org administrator",
+  org_admin: "Clinic admin",
   provider: "Provider",
   patient: "Patient",
 };
@@ -77,7 +77,7 @@ export default function TenantShell({
               ))}
             </nav>
             <div className="mt-10 space-y-1 text-xs text-[color:var(--muted)]">
-              <p>Organization ID</p>
+              <p>Active organization ID</p>
               <p className="truncate text-[color:var(--foreground)]">{membership.organization.id}</p>
             </div>
             <div className="mt-6">

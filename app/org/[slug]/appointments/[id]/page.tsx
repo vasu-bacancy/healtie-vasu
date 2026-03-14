@@ -9,14 +9,14 @@ import { updateAppointmentStatus, updateMeetingUrl } from "../actions";
 
 const STATUS_TRANSITIONS: Record<string, { label: string; next: string }[]> = {
   scheduled: [
-    { label: "Check in", next: "checked_in" },
-    { label: "Cancel", next: "cancelled" },
+    { label: "Check in patient", next: "checked_in" },
+    { label: "Cancel appointment", next: "cancelled" },
   ],
   checked_in: [
     { label: "Start visit", next: "in_progress" },
-    { label: "Cancel", next: "cancelled" },
+    { label: "Cancel appointment", next: "cancelled" },
   ],
-  in_progress: [{ label: "Complete", next: "completed" }],
+  in_progress: [{ label: "Mark visit complete", next: "completed" }],
   completed: [],
   cancelled: [],
 };
@@ -57,9 +57,10 @@ export default async function AppointmentDetailPage({
             ← Appointments
           </Link>
           <h1 className="text-3xl font-semibold tracking-tight text-[color:var(--foreground)]">
-            {format(new Date(appt.scheduled_start), "EEEE, MMMM d, yyyy")}
+            Appointment details
           </h1>
           <p className="text-sm text-[color:var(--muted)]">
+            {format(new Date(appt.scheduled_start), "EEEE, MMMM d, yyyy")} ·{" "}
             {format(new Date(appt.scheduled_start), "h:mm a")} –{" "}
             {format(new Date(appt.scheduled_end), "h:mm a")}
           </p>
@@ -75,7 +76,7 @@ export default async function AppointmentDetailPage({
         {/* Details */}
         <div className="rounded-[1.5rem] border border-[color:var(--border)] bg-white p-6 space-y-4">
           <h2 className="text-xs font-semibold uppercase tracking-[0.2em] text-[color:var(--muted)]">
-            Details
+            Visit details
           </h2>
           <dl className="space-y-3 text-sm">
             <Row label="Patient">
@@ -94,8 +95,8 @@ export default async function AppointmentDetailPage({
             <Row label="Visit type">
               <span className="capitalize">{appt.visit_type.replace("_", " ")}</span>
             </Row>
-            <Row label="Reason">{appt.reason ?? "—"}</Row>
-            <Row label="Booked">
+            <Row label="Reason for visit">{appt.reason ?? "Not provided"}</Row>
+            <Row label="Booked on">
               {format(new Date(appt.created_at), "MMM d, yyyy")}
             </Row>
           </dl>
@@ -106,7 +107,7 @@ export default async function AppointmentDetailPage({
           {/* Meeting URL */}
           <div className="rounded-[1.5rem] border border-[color:var(--border)] bg-white p-6 space-y-4">
             <h2 className="text-xs font-semibold uppercase tracking-[0.2em] text-[color:var(--muted)]">
-              Meeting link
+              Video visit link
             </h2>
             {appt.meeting_url ? (
               <div className="space-y-3">
@@ -116,17 +117,22 @@ export default async function AppointmentDetailPage({
                   rel="noopener noreferrer"
                   className="block truncate rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-2.5 text-sm font-semibold text-emerald-700 hover:bg-emerald-100"
                 >
-                  Join meeting →
+                  Join video visit
                 </a>
                 <p className="text-xs text-[color:var(--muted)] truncate">{appt.meeting_url}</p>
               </div>
             ) : (
-              <p className="text-sm text-[color:var(--muted)]">No meeting link set.</p>
+              <p className="text-sm text-[color:var(--muted)]">
+                No video link has been added yet.
+              </p>
             )}
 
             {canManage && (
               <form action={updateMeetingUrl} className="space-y-2 border-t border-[color:var(--border)] pt-3">
                 <input type="hidden" name="id" value={appt.id} />
+                <p className="text-xs text-[color:var(--muted)]">
+                  Paste the hosted video link patients should use to join the visit.
+                </p>
                 <input
                   name="meeting_url"
                   type="url"
@@ -138,7 +144,7 @@ export default async function AppointmentDetailPage({
                   type="submit"
                   className="rounded-[0.75rem] border border-[color:var(--border)] px-3 py-1.5 text-xs font-semibold text-[color:var(--foreground)] transition hover:bg-[color:var(--surface-strong)]"
                 >
-                  {appt.meeting_url ? "Update link" : "Add link"}
+                  {appt.meeting_url ? "Save meeting link" : "Add meeting link"}
                 </button>
               </form>
             )}
@@ -148,8 +154,11 @@ export default async function AppointmentDetailPage({
           {canManage && transitions.length > 0 && (
             <div className="rounded-[1.5rem] border border-[color:var(--border)] bg-white p-6 space-y-3">
               <h2 className="text-xs font-semibold uppercase tracking-[0.2em] text-[color:var(--muted)]">
-                Update status
+                Manage visit status
               </h2>
+              <p className="text-sm text-[color:var(--muted)]">
+                Move the appointment forward as the patient checks in and the visit wraps up.
+              </p>
               <div className="flex flex-wrap gap-2">
                 {transitions.map((t) => (
                   <form key={t.next} action={updateAppointmentStatus}>
@@ -163,7 +172,11 @@ export default async function AppointmentDetailPage({
                           : "bg-[color:var(--accent)] text-white hover:bg-[color:var(--accent-strong)]"
                       }`}
                     >
-                      {t.label}
+                      {t.next === "checked_in"
+                        ? "Mark as checked in"
+                        : t.next === "completed"
+                          ? "Mark visit complete"
+                          : t.label}
                     </button>
                   </form>
                 ))}
@@ -177,7 +190,7 @@ export default async function AppointmentDetailPage({
               href={`/org/${slug}/appointments/${appt.id}/room`}
               className="flex w-full items-center justify-center rounded-[1.5rem] bg-[color:var(--accent)] px-6 py-4 text-sm font-semibold text-white transition hover:bg-[color:var(--accent-strong)]"
             >
-              Enter visit room →
+              Open visit room
             </Link>
           )}
         </div>

@@ -14,10 +14,12 @@ export async function updatePatientProfile(formData: FormData) {
 
   const profile = await ensureProfileForUser(supabase, user);
   const membership = await getActiveMembershipWithOrg(supabase, profile.id);
-  if (!membership || membership.role !== "patient") throw new Error("Unauthorized");
+  if (!membership || membership.role !== "patient") {
+    throw new Error("Only patients can update intake details from this page.");
+  }
 
   const patient = await getPatientByProfileId(supabase, profile.id, membership.organization_id);
-  if (!patient) throw new Error("No patient record linked to your account.");
+  if (!patient) throw new Error("We couldn't find a patient record for this account.");
 
   const full_name = (formData.get("full_name") as string).trim();
   const dob = (formData.get("dob") as string) || null;
@@ -25,7 +27,7 @@ export async function updatePatientProfile(formData: FormData) {
   const phone = (formData.get("phone") as string).trim() || null;
   const email = (formData.get("email") as string).trim() || null;
 
-  if (!full_name) throw new Error("Full name is required.");
+  if (!full_name) throw new Error("Enter your full name before saving.");
 
   // Use admin client — RLS restricts patient writes to org_admin/provider only
   const admin = createAdminClient();

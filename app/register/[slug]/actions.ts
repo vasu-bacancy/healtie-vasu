@@ -11,7 +11,7 @@ export async function registerPatient(
 ): Promise<RegisterResult> {
   const parsed = registerSchema.safeParse(values);
   if (!parsed.success) {
-    return { success: false, error: "Invalid form data. Please check your inputs." };
+    return { success: false, error: "Please review the highlighted fields and try again." };
   }
 
   const { full_name, email, password, dob, sex, phone } = parsed.data;
@@ -26,7 +26,7 @@ export async function registerPatient(
     .maybeSingle();
 
   if (!org) {
-    return { success: false, error: "This registration link is not valid." };
+    return { success: false, error: "This registration link is no longer valid. Ask your clinic for a new one." };
   }
 
   // 2. Check for duplicate email
@@ -39,7 +39,7 @@ export async function registerPatient(
   if (existingProfile) {
     return {
       success: false,
-      error: "An account with this email already exists. Please sign in.",
+      error: "An account already exists for this email. Sign in instead, or use a different email address.",
     };
   }
 
@@ -52,7 +52,7 @@ export async function registerPatient(
   });
 
   if (authError || !authData.user) {
-    return { success: false, error: authError?.message ?? "Failed to create account." };
+    return { success: false, error: "We couldn't create your account right now. Please try again in a moment." };
   }
 
   const userId = authData.user.id;
@@ -75,7 +75,7 @@ export async function registerPatient(
 
   if (profileError) {
     await rollback();
-    return { success: false, error: "Unable to create account. Please try again." };
+    return { success: false, error: "We couldn't finish setting up your account. Please try again." };
   }
 
   // 5. Insert patient record
@@ -97,7 +97,7 @@ export async function registerPatient(
 
   if (patientError || !patient) {
     await rollback();
-    return { success: false, error: "Unable to create account. Please try again." };
+    return { success: false, error: "We couldn't finish setting up your patient record. Please try again." };
   }
 
   // 6. Insert membership
@@ -110,7 +110,7 @@ export async function registerPatient(
 
   if (membershipError) {
     await rollback(patient.id);
-    return { success: false, error: "Unable to create account. Please try again." };
+    return { success: false, error: "We couldn't finish linking your account to this clinic. Please try again." };
   }
 
   return { success: true };

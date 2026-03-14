@@ -27,11 +27,10 @@ export default async function RegisterPage({
               Invalid link
             </p>
             <h1 className="mt-4 text-2xl font-semibold text-[color:var(--foreground)]">
-              Registration link not found
+              We couldn&apos;t open this registration link
             </h1>
             <p className="mt-2 text-sm text-[color:var(--muted)]">
-              This registration link is not valid or the organization is no longer active.
-              Please contact your care provider for a valid link.
+              This registration link is missing or no longer active. Contact your clinic for a current invite link.
             </p>
             <Link
               href="/sign-in"
@@ -53,10 +52,10 @@ export default async function RegisterPage({
             Patient registration
           </p>
           <h1 className="mt-4 text-3xl font-semibold text-[color:var(--foreground)]">
-            Join {org.name}
+            Create your account for {org.name}
           </h1>
           <p className="mt-2 text-sm text-[color:var(--muted)]">
-            Create your patient account to book appointments and view your care history.
+            Once you&apos;re signed up, you can book visits, join virtual appointments, and review your care history.
           </p>
           <div className="mt-6">
             <RegisterForm slug={slug} />

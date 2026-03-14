@@ -15,7 +15,7 @@ async function getAuthorizedMembership() {
   const profile = await ensureProfileForUser(supabase, user);
   const membership = await getActiveMembershipWithOrg(supabase, profile.id);
   if (!membership || membership.role === "patient") {
-    throw new Error("Unauthorized");
+    throw new Error("Only clinic staff can update patient records.");
   }
   return { supabase, membership };
 }
@@ -24,7 +24,7 @@ export async function createPatient(formData: FormData) {
   const { supabase, membership } = await getAuthorizedMembership();
 
   const full_name = (formData.get("full_name") as string).trim();
-  if (!full_name) throw new Error("Full name is required");
+  if (!full_name) throw new Error("Enter the patient's full name before saving.");
 
   const dob = (formData.get("dob") as string) || null;
   const sex = (formData.get("sex") as string) || null;
@@ -58,7 +58,7 @@ export async function addAllergy(formData: FormData) {
   const substance = (formData.get("substance") as string).trim();
   const reaction = (formData.get("reaction") as string).trim() || null;
 
-  if (!substance) throw new Error("Substance is required");
+  if (!substance) throw new Error("Enter the allergy name before saving.");
 
   const { error } = await supabase.from("patient_allergies").insert({
     organization_id: membership.organization_id,
@@ -79,7 +79,7 @@ export async function addMedication(formData: FormData) {
   const medication_name = (formData.get("medication_name") as string).trim();
   const dosage = (formData.get("dosage") as string).trim() || null;
 
-  if (!medication_name) throw new Error("Medication name is required");
+  if (!medication_name) throw new Error("Enter the medication name before saving.");
 
   const { error } = await supabase.from("patient_medications").insert({
     organization_id: membership.organization_id,

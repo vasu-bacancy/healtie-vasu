@@ -13,7 +13,9 @@ export async function createProvider(formData: FormData) {
 
   const profile = await ensureProfileForUser(supabase, user);
   const membership = await getActiveMembershipWithOrg(supabase, profile.id);
-  if (!membership || membership.role !== "org_admin") throw new Error("Unauthorized");
+  if (!membership || membership.role !== "org_admin") {
+    throw new Error("Only clinic admins can create provider accounts.");
+  }
 
   const full_name = (formData.get("full_name") as string).trim();
   const email = (formData.get("email") as string).trim();
@@ -23,7 +25,9 @@ export async function createProvider(formData: FormData) {
   const timezone = (formData.get("timezone") as string) || "UTC";
   const bio = (formData.get("bio") as string).trim() || null;
 
-  if (!full_name || !email || !password) throw new Error("Name, email, and password are required.");
+  if (!full_name || !email || !password) {
+    throw new Error("Enter the provider's name, email address, and temporary password.");
+  }
 
   const admin = createAdminClient();
   const orgId = membership.organization_id;
@@ -34,7 +38,7 @@ export async function createProvider(formData: FormData) {
     .select("id")
     .eq("email", email)
     .maybeSingle();
-  if (existing) throw new Error("An account with this email already exists.");
+  if (existing) throw new Error("An account already exists for this email address.");
 
   // Create auth user
   const { data: authData, error: authError } = await admin.auth.admin.createUser({
@@ -43,7 +47,9 @@ export async function createProvider(formData: FormData) {
     email_confirm: true,
     user_metadata: { full_name },
   });
-  if (authError || !authData.user) throw new Error(authError?.message ?? "Failed to create account.");
+  if (authError || !authData.user) {
+    throw new Error("We couldn't create the provider account right now. Please try again.");
+  }
 
   const userId = authData.user.id;
 
@@ -55,7 +61,7 @@ export async function createProvider(formData: FormData) {
   });
   if (profileError) {
     await admin.auth.admin.deleteUser(userId);
-    throw new Error("Failed to create profile.");
+    throw new Error("We couldn't create the provider profile. Please try again.");
   }
 
   // Insert membership
@@ -67,7 +73,7 @@ export async function createProvider(formData: FormData) {
   });
   if (membershipError) {
     await admin.auth.admin.deleteUser(userId);
-    throw new Error("Failed to create membership.");
+    throw new Error("We couldn't link this provider to the clinic. Please try again.");
   }
 
   // Insert provider record
@@ -78,7 +84,7 @@ export async function createProvider(formData: FormData) {
     .single();
   if (providerError) {
     await admin.auth.admin.deleteUser(userId);
-    throw new Error("Failed to create provider record.");
+    throw new Error("We couldn't create the provider record. Please try again.");
   }
 
   redirect(`/org/${membership.organization.slug}/providers/${provider.id}`);
