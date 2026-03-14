@@ -55,9 +55,9 @@ If a task does not directly improve the end-to-end flow of `org admin -> provide
 - [x] Add audit log events for note creation and appointment status changes.
 
 ### 9. Dashboards
-- [ ] Provider dashboard with today's schedule and pending notes.
-- [ ] Patient portal with upcoming appointment and chart summary.
-- [ ] Org admin dashboard with counts for patients, providers, appointments.
+- [x] Provider dashboard with today's schedule and pending notes.
+- [x] Patient portal with upcoming appointment and chart summary.
+- [x] Org admin dashboard with counts for patients, providers, appointments.
 
 ### 10. QA / Demo Prep
 - [ ] Test with at least two organizations to verify isolation.

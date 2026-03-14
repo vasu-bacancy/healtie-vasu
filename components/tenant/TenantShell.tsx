@@ -23,7 +23,7 @@ const navConfig: Record<string, { label: string; href: string }[]> = {
   patient: [
     { label: "Upcoming visits", href: "" },
     { label: "Appointments", href: "appointments" },
-    { label: "Chart", href: "chart" },
+    { label: "My profile", href: "profile" },
   ],
 };
 

@@ -49,7 +49,7 @@ export default async function ProviderProfilePage({
             ← Providers
           </Link>
           <h1 className="text-3xl font-semibold tracking-tight text-[color:var(--foreground)]">
-            {provider.profile.full_name ?? provider.profile.email}
+            {provider.profile?.full_name ?? provider.profile?.email ?? "—"}
           </h1>
           {provider.specialty && (
             <p className="text-sm text-[color:var(--muted)]">{provider.specialty}</p>
@@ -64,7 +64,7 @@ export default async function ProviderProfilePage({
             Profile
           </h2>
           <dl className="space-y-3 text-sm">
-            <Row label="Email">{provider.profile.email}</Row>
+            <Row label="Email">{provider.profile?.email ?? "—"}</Row>
             <Row label="Specialty">{provider.specialty ?? "—"}</Row>
             <Row label="License">{provider.license_number ?? "—"}</Row>
             <Row label="Timezone">{provider.timezone}</Row>

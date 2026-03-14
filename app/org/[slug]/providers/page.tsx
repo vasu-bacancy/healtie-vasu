@@ -28,13 +28,23 @@ export default async function ProvidersPage({
 
   return (
     <section className="space-y-6">
-      <header className="border-b border-[color:var(--border)] pb-6">
-        <p className="text-sm font-semibold text-[color:var(--muted)]">
-          {membership.organization.name}
-        </p>
-        <h1 className="mt-1 text-3xl font-semibold tracking-tight text-[color:var(--foreground)]">
-          Providers
-        </h1>
+      <header className="flex items-center justify-between border-b border-[color:var(--border)] pb-6">
+        <div>
+          <p className="text-sm font-semibold text-[color:var(--muted)]">
+            {membership.organization.name}
+          </p>
+          <h1 className="mt-1 text-3xl font-semibold tracking-tight text-[color:var(--foreground)]">
+            Providers
+          </h1>
+        </div>
+        {membership.role === "org_admin" && (
+          <Link
+            href={`/org/${slug}/providers/new`}
+            className="rounded-[1rem] bg-[color:var(--accent)] px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-[color:var(--accent-strong)]"
+          >
+            Add provider
+          </Link>
+        )}
       </header>
 
       {providers.length === 0 ? (
@@ -62,7 +72,7 @@ export default async function ProvidersPage({
               {providers.map((p) => (
                 <tr key={p.id} className="transition hover:bg-[color:var(--surface)]">
                   <td className="px-6 py-4 font-medium text-[color:var(--foreground)]">
-                    {p.profile.full_name ?? p.profile.email}
+                    {p.profile?.full_name ?? p.profile?.email ?? "—"}
                   </td>
                   <td className="px-6 py-4 text-[color:var(--muted)]">
                     {p.specialty ?? "—"}
